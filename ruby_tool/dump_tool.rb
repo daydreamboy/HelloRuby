@@ -25,7 +25,7 @@
 # @see https://stackoverflow.com/questions/3453262/how-to-strip-leading-and-trailing-quote-from-string-in-ruby
 # @see http://ruby-doc.org/core-2.1.0/Regexp.html
 #
-# @return
+# @return [NilClass]
 #
 # @example
 #
