@@ -12,6 +12,22 @@
 
 
 
+## 2、常用Ruby函数
+
+
+
+### system
+
+格式：**system([env,] command... [,options]) → true, false or nil**
+
+作用：产生一个子shell，执行command
+
+说明：
+
+返回nil，表示命令执行出错
+
+> system returns `true` if the command gives zero exit status, `false` for non zero exit status. Returns `nil` if command execution fails. An error status is available in `$?`.
+
 
 
 
