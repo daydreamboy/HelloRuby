@@ -42,9 +42,17 @@ end
 
 说明：
 
-返回nil，表示命令执行出错
+返回nil，表示命令执行出错。
+
+返回true，表示命令执行返回状态为0。
+
+返回false，表示命令执行返回状态为非0。
+
+官方描述，如下
 
 > system returns `true` if the command gives zero exit status, `false` for non zero exit status. Returns `nil` if command execution fails. An error status is available in `$?`.
+
+
 
 
 
@@ -62,9 +70,77 @@ Ruby内置提供json库，`require 'json'`。
 
 
 
+## 4、常用Ruby Tips
+
+### （1）Shell和Ruby脚本通信
+
+ruby脚本通过shell执行，shell和ruby脚本可以进行交互。
 
 
-## 3、RDoc语法
+
+#### a. shell将数据传给ruby
+
+shell将数据传给ruby，有两种方式：命令行参数、shell环境变量
+
+* 命令行参数。执行ruby脚本时，将数据作为参数传给ruby脚本。
+
+  ```shell
+  $ ruby 03_pass_shell_command_to_script.rb ruby 03_callee.rb
+  或者
+  $ ./03_pass_shell_command_to_script.rb ruby 03_callee.rb
+  ```
+
+  这里`ruby 03_callee.rb`是ruby脚本接收的参数，可以通过`ARGV`预定义变量[^1]拿到。示例代码，见03_pass_shell_command_to_script.rb
+
+* shell环境变量。执行ruby脚本前，用export命令将数据导入到当前shell的环境变量中。ruby脚本通过`ENV`来访问。示例代码，见04_pass_shell_env_var_to_script.rb
+
+
+
+#### b. ruby将数据传给shell
+
+​       ruby将数据传给shell的方式：可以利用ruby执行export命令将数据导出到当前shell环境变量中。
+
+注意：
+
+> 这种方式需要shell按照特殊实行执行ruby代码或者ruby脚本。
+
+
+
+​        如果直接在shell中，执行`ruby xxx.rb`，xxx.rb使用system函数导出环境变量，在当前shell中，获取不到这个环境变量。举个例子
+
+```shell
+$ ruby -e "system('export foo=bar')"; echo $foo
+$ (empty here)
+```
+
+借助shell的`eva`l函数和<code>\`command`</code>函数，如下
+
+```shell
+$ eval `ruby -e "puts 'export foo=bar'"`; echo $foo
+$ bar
+```
+
+上面的eval函数执行的内容，实际是<code>\`command`</code>函数执行后输出的结果，因此是ruby的puts函数的输出内容。
+
+
+
+换成执行ruby脚本方式，如下
+
+```shell
+eval `ruby './05_export_env_var_from_script_to_shell.rb'`
+
+echo "ruby_secret1 = $ruby_secret1"
+echo "ruby_secret2 = $ruby_secret2"
+echo "ruby_secret3 = $ruby_secret3"
+```
+
+示例代码，见05_export_env_var_from_script_to_shell.rb/sh
+
+
+
+
+
+## 5、RDoc语法
 
 [RDoc](https://ruby.github.io/rdoc/)是Ruby代码的注释生成文档的工具，包括rdoc和ri两个工具。这个[Cheatsheet](https://devhints.io/rdoc)提供RDoc支持注释形式。
 
@@ -113,7 +189,7 @@ YARD支持的[tag列表](https://www.rubydoc.info/gems/yard/file/docs/Tags.md#Ta
 
 
 
-## 4、gem命令使用
+## 6、gem命令使用
 
 
 
@@ -148,7 +224,24 @@ https://gems.ruby-china.com/
 
 
 
-## 5、rvm命令使用
+## 7、rvm命令使用
+
+
+
+## 附录
+
+
+
+### （1）Ruby预定义变量[^1]
+
+
+
+| 变量名 | 值类型 | 作用                                                    |
+| ------ | ------ | ------------------------------------------------------- |
+| ARGV   | Array  | 命令行参数（除ruby脚本文件名之外的参数），是`$*.`的别名 |
+| ENV    | Hash   | 当前shell的环境变量                                     |
+
+
 
 
 
@@ -156,4 +249,5 @@ https://gems.ruby-china.com/
 
 ## References
 
+[^1]:http://ruby-doc.org/core-2.6.3/doc/globals_rdoc.html#label-Pre-defined+variables Ruby预定义变量
 
