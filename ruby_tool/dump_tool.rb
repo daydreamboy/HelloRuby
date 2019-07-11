@@ -1,29 +1,9 @@
 #encoding: utf-8
 
-
-# 1. Dump object
-#
-
-#
-# @see
-#
-#
-#
-#
-# /<.+>/.match("<a><b>")  #=> #<MatchData "<a><b>">
-# /<.+?>/.match("<a><b>") #=> #<MatchData "<a>">
-#
-#
-
 ##
 # Dump object as format 'var = (type) value'
 #
 # @param [Object]  arg
-#
-# @see https://stackoverflow.com/questions/15769739/determining-type-of-an-object-in-ruby
-# @see https://stackoverflow.com/questions/41032717/get-original-variable-name-from-function-in-ruby
-# @see https://stackoverflow.com/questions/3453262/how-to-strip-leading-and-trailing-quote-from-string-in-ruby
-# @see http://ruby-doc.org/core-2.1.0/Regexp.html
 #
 # @return [NilClass]
 #
@@ -39,6 +19,14 @@
 # [Debug] test_dump_object.rb:15: [1, 2, 3] = (Array) [1, 2, 3]
 # [Debug] test_dump_object.rb:16: 3.14 = (Float) 3.14
 #
+# @see https://stackoverflow.com/questions/15769739/determining-type-of-an-object-in-ruby
+# @see https://stackoverflow.com/questions/41032717/get-original-variable-name-from-function-in-ruby
+# @see https://stackoverflow.com/questions/3453262/how-to-strip-leading-and-trailing-quote-from-string-in-ruby
+# @see http://ruby-doc.org/core-2.1.0/Regexp.html
+#
+# @note
+# /<.+>/.match("<a><b>")  #=> #<MatchData "<a><b>">
+# /<.+?>/.match("<a><b>") #=> #<MatchData "<a>">
 def dump_object(arg)
   loc = caller_locations.first
   line = File.read(loc.path).lines[loc.lineno - 1]

@@ -4,9 +4,64 @@
 
 ## 1、Ruby语法
 
+### （1）数据类型
+
+Ruby中所有数据都是基于类的，即基本类型（整型、浮点数）也是对象。数据类型，有如下几种[^2]
+
+- Booleans and nil（TrueClass/FalseClass、NilClass）
+- Numbers（Integer、Float、Fixnum）
+- Strings（String）
+- Symbols（Symbol）
+- Arrays（Array）
+- Hashes（Hash）
+- Ranges（Range）
+- Regular Expressions（Regexp）
+- Procs（Proc）
 
 
-### （1）dangerous方法
+
+irb中输出，如下
+
+```ruby
+2.4.0 :001 > true.class
+ => TrueClass 
+2.4.0 :002 > false.class
+ => FalseClass 
+2.4.0 :003 > nil.class
+ => NilClass 
+2.4.0 :004 > "Ruby".class
+ => String 
+2.4.0 :005 > 1.class
+ => Integer 
+2.4.0 :006 > 4.5.class
+ => Float 
+2.4.0 :007 > 3_463_456_457.class
+ => Integer 
+2.4.0 :008 > :age.class
+ => Symbol 
+2.4.0 :009 > [1, 2, 3].class
+ => Array 
+2.4.0 :010 > h = {:name => "Jane", :age => 17}
+ => {:name=>"Jane", :age=>17} 
+2.4.0 :011 > h.class
+ => Hash 
+2.4.0 :012 > (1..2).class
+ => Range 
+2.4.0 :013 > /.*/.class
+ => Regexp 
+2.4.0 :014 > -> { 1 + 1 }.class
+ => Proc 
+```
+
+
+
+示例代码见data_type.rb
+
+
+
+### （2）Ruby方法
+
+#### a. dangerous方法
 
 ```ruby
 class String
@@ -25,6 +80,10 @@ end
 ​      Ruby约定，方法名以`!`结尾，表示这个方法会修改对象本身或者对象内部状态，称为dangerous方法。例如String的`upcase!`方法。
 
 
+
+#### b. 返回值类型为bool的方法
+
+​       Ruby约定，方法名以`?`结尾，表示这个方法的返回值类型是bool，例如Object提供的`is_a?`函数和`kind_of?`函数。
 
 
 
@@ -250,4 +309,6 @@ https://gems.ruby-china.com/
 ## References
 
 [^1]:http://ruby-doc.org/core-2.6.3/doc/globals_rdoc.html#label-Pre-defined+variables Ruby预定义变量
+
+[^2]:https://docs.ruby-lang.org/en/2.0.0/syntax/literals_rdoc.html Ruby数据类型
 
