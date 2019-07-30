@@ -197,6 +197,68 @@ echo "ruby_secret3 = $ruby_secret3"
 
 
 
+### （2）Ruby方法传参方式
+
+Ruby方法传参方式，归纳有下面几种
+
+* 正常传参方式，参数有序性
+* 可选参数，参数有序性
+* keyword参数，参数无序性
+* 可变参数
+
+
+
+#### a. 正常传参方式
+
+正常传参方式：实参和形参是一一对应的，而且实参要保证顺序。
+
+举个例子，如下
+
+```ruby
+def write(file, data, mode)
+  ...
+end
+```
+
+write方法有三个参数，必须按照顺序传入3个实参。
+
+
+
+#### b. 可选参数
+
+可选参数：参数有默认值，该形参对应的实参可以不传，使用默认值。
+
+注意：
+
+> 可选参数总是位于正常参数之后，而且可选参数可以有多个。否则，脚本执行报错。
+>
+> 举个错误的例子，如下
+>
+> ```ruby
+> def write3(file, data, mode = "w", size, name = "default")
+> end
+> 
+> $ syntax error, unexpected '=', expecting ')'
+> data, mode = "w", size, name = "default")
+>                               ^
+> $ syntax error, unexpected ')', expecting end-of-input
+> = "w", size, name = "default")
+>                               ^
+> ```
+>
+> 正确形式是
+>
+> ```ruby
+> def write3_fixed(file, data, size, mode = "w", name = "default")
+> end
+> ```
+
+
+
+c. 
+
+
+
 
 
 ## 5、RDoc语法
