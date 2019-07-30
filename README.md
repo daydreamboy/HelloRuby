@@ -87,6 +87,123 @@ end
 
 
 
+
+
+### （3）Ruby方法传参方式[^3]
+
+Ruby方法传参方式，归纳有下面几种
+
+- 正常传参方式，参数有序性
+- 可选参数，参数有序性
+- keyword参数，参数无序性
+- 可变参数
+
+
+
+#### a. 正常传参方式
+
+正常传参方式：实参和形参是一一对应的，而且实参要保证顺序。
+
+举个例子，如下
+
+```ruby
+def write(file, data, mode)
+  ...
+end
+```
+
+write方法有三个参数，必须按照顺序传入3个实参。
+
+
+
+#### b. 可选参数
+
+可选参数：参数有默认值，该形参对应的实参可以不传，使用默认值。
+
+注意：
+
+> 1. 两个及以上可选参数总是位于正常参数之后，而且可选参数可以有多个。否则，脚本执行报错。
+>
+> 举个错误的例子，如下
+>
+> ```ruby
+> def write3(file, data, mode = "w", size, name = "default")
+> end
+> 
+> $ syntax error, unexpected '=', expecting ')'
+> data, mode = "w", size, name = "default")
+>                            ^
+> $ syntax error, unexpected ')', expecting end-of-input
+> = "w", size, name = "default")
+>                            ^
+> ```
+>
+> 正确形式是
+>
+> ```ruby
+> def write3_fixed(file, data, size, mode = "w", name = "default")
+> end
+> ```
+>
+> 2. 一个可选参数，允许在正常参数之前。举个例子，如下
+>
+> ```ruby
+> def write2(file = 'default', data, mode, size)
+>   ...
+> end
+> 
+> ```
+>
+> 调用根据参数个数，自动匹配对应参数，如下
+>
+> write2(`data` "cats are cool!", `mode` "w", `size` 10)
+> write2(`file` "cats.txt", `data` "cats are cool!", `mode` "r", `size` 10)
+
+
+
+
+
+#### c. keyword参数
+
+keyword参数，指形参后面跟一个冒号，表示实参必须以键值对的形式传入。
+
+举个例子
+
+```ruby
+# Note: the last is optional keyword argument
+def write(file:, data:, mode: "rw")
+  ...
+end
+
+# Note: keyword argument mixed with normal argument
+def write2(file, data:, mode: "rw")
+  ...
+end
+
+write(data: 123, file: "test.txt")
+write2("test.txt", data: 123, mode: 'r')
+```
+
+注意：
+
+> keyword参数，要求实参必须以键值对的形式传入，否则脚本执行出错
+
+
+
+
+
+
+
+
+
+### （4）Ruby注释方式[^4]
+
+
+
+
+
+
+
 ## 2、常用Ruby函数
 
 
@@ -194,68 +311,6 @@ echo "ruby_secret3 = $ruby_secret3"
 ```
 
 示例代码，见05_export_env_var_from_script_to_shell.rb/sh
-
-
-
-### （2）Ruby方法传参方式
-
-Ruby方法传参方式，归纳有下面几种
-
-* 正常传参方式，参数有序性
-* 可选参数，参数有序性
-* keyword参数，参数无序性
-* 可变参数
-
-
-
-#### a. 正常传参方式
-
-正常传参方式：实参和形参是一一对应的，而且实参要保证顺序。
-
-举个例子，如下
-
-```ruby
-def write(file, data, mode)
-  ...
-end
-```
-
-write方法有三个参数，必须按照顺序传入3个实参。
-
-
-
-#### b. 可选参数
-
-可选参数：参数有默认值，该形参对应的实参可以不传，使用默认值。
-
-注意：
-
-> 可选参数总是位于正常参数之后，而且可选参数可以有多个。否则，脚本执行报错。
->
-> 举个错误的例子，如下
->
-> ```ruby
-> def write3(file, data, mode = "w", size, name = "default")
-> end
-> 
-> $ syntax error, unexpected '=', expecting ')'
-> data, mode = "w", size, name = "default")
->                               ^
-> $ syntax error, unexpected ')', expecting end-of-input
-> = "w", size, name = "default")
->                               ^
-> ```
->
-> 正确形式是
->
-> ```ruby
-> def write3_fixed(file, data, size, mode = "w", name = "default")
-> end
-> ```
-
-
-
-c. 
 
 
 
@@ -373,4 +428,10 @@ https://gems.ruby-china.com/
 [^1]:http://ruby-doc.org/core-2.6.3/doc/globals_rdoc.html#label-Pre-defined+variables Ruby预定义变量
 
 [^2]:https://docs.ruby-lang.org/en/2.0.0/syntax/literals_rdoc.html Ruby数据类型
+
+[^3]: https://www.rubyguides.com/2018/06/rubys-method-arguments/
+
+[^4]:https://stackoverflow.com/a/2991254
+
+
 
