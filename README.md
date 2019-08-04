@@ -96,13 +96,27 @@ Ruby方法传参方式，归纳有下面几种
 - 正常传参方式，参数有序性
 - 可选参数，参数有序性
 - keyword参数，参数无序性
-- 可变参数
+- 可变参数列表
+
+> 示例代码，见
+>
+> method_argument_1_normal.rb
+>
+> method_argument_2_optional.rb
+>
+> method_argument_3_keyword.rb
+>
+> method_argument_4_variable_list_as_array.rb
+>
+> method_argument_5_variable_list_as_hash.rb
 
 
 
 #### a. 正常传参方式
 
 正常传参方式：实参和形参是一一对应的，而且实参要保证顺序。
+
+
 
 举个例子，如下
 
@@ -119,6 +133,8 @@ write方法有三个参数，必须按照顺序传入3个实参。
 #### b. 可选参数
 
 可选参数：参数有默认值，该形参对应的实参可以不传，使用默认值。
+
+
 
 注意：
 
@@ -167,6 +183,10 @@ write方法有三个参数，必须按照顺序传入3个实参。
 
 keyword参数，指形参后面跟一个冒号，表示实参必须以键值对的形式传入。
 
+keyword参数的好处是实参可以不用保序，而且调用有key做描述，不用转到方法签名处，更加清楚。
+
+
+
 举个例子
 
 ```ruby
@@ -190,7 +210,52 @@ write2("test.txt", data: 123, mode: 'r')
 
 
 
+#### d. 可变参数列表
 
+可变参数列表分为两种：传入多个正常参数，和传入多个keyword参数
+
+
+
+##### 1. 传入多个正常参数，可用splat operator(`*`)来接收
+
+举个例子
+
+```ruby
+def print_all(*args)
+  # Note: args is an array, but *args is a placeholder which expanded as literal elements
+  dump_object(args)
+
+  # Note: expand *args as 1, 2, 3, 4, 5
+  method_with_5_args(*args)
+end
+
+print_all(1, 2, 3, 4, 5)
+```
+
+在print_all函数中args变成一个数组对象，如果再对它使用splat operator(`*`)，则展开为字面数组。例如`method_with_5_args(*args)`，*arg展开为5个参数传给method_with_5_args函数
+
+
+
+##### 2. 传入多个keyword参数，可用double splat operator(`**`)来接收
+
+举个例子
+
+```ruby
+def print_all(**args)
+  # Note: args is a hash
+  dump_object(args)
+
+  # Note: expand *args as [:x, 1], [:y, 2]
+  method_with_2_arguments *args
+
+  # Note: **args also a hash
+  dump_object(**args)
+end
+
+print_all(x: 1, y: 2)
+```
+
+在print_all函数中args变成一个Hash对象，而*args将Hash对象转成数组，**args还是本身的Hash对象
 
 
 
@@ -198,7 +263,50 @@ write2("test.txt", data: 123, mode: 'r')
 
 ### （4）Ruby注释方式[^4]
 
+Ruby的单行注释使用`#`，而多行注释则有下面几种方式
 
+```ruby
+# 1. =begin...=end
+
+=begin
+Every body mentioned this way
+to have multiline comments.
+
+The =begin and =end must be at the beginning of the line or
+it will be a syntax error.
+=end
+
+# 2. Here doc style
+
+<<-DOC
+Also, you could create a docstring.
+which...
+DOC
+
+# 3. literal string
+
+"..is kinda ugly and creates
+a String instance, but I know one guy
+with a Smalltalk background, who
+does this."
+
+# 4. sharp sign
+
+##
+# most
+# people
+# do
+# this
+
+# 5. __END__ sign
+
+__END__
+
+But all forgot there is another option.
+Only at the end of a file, of course.
+```
+
+> 示例代码，见block_comment.rb
 
 
 
