@@ -259,6 +259,56 @@ print_all(x: 1, y: 2)
 
 
 
+#### e. 混合多种传参方式
+
+根据上面几种传参方式，可以混合使用，因此存在优先级：required -> optional -> variable -> keyword
+
+```ruby
+# Note: required -> optional -> variable -> keyword
+def testing(a, b = 1, *c, d: 1, **x)
+  # p a,b,c,d,x
+  dump_object(a)
+  dump_object(b)
+  dump_object(c)
+  dump_object(d)
+  dump_object(x)
+end
+
+testing('a', 'b', 'c', 'd', 'e', d: 2, x: 1)
+```
+
+`**x`和d: 1都属于keyword参数，`*c`属于variable参数
+
+> 示例代码，见method_argument_6_mixed.rb
+
+
+
+#### d. 接收所有参数
+
+Ruby方法传参可以使用通配符`*`，接收所有参数。此方式不常见，但配合super方法可以将参数透传给父类方法。
+
+举个例子，如下
+
+```ruby
+class Food
+  def nutrition(vitamins, minerals)
+    puts vitamins
+    puts minerals
+  end
+end
+
+class Bacon < Food
+  def nutrition(*)
+    super
+  end
+end
+
+bacon = Bacon.new
+bacon.nutrition("B6", "Iron")
+```
+
+Food的nutrition方法的参数个数修改了，不影响子类Bacon的nutrition方法。
+
 
 
 ### （4）Ruby注释方式[^4]
