@@ -558,7 +558,33 @@ https://gems.ruby-china.com/
 
 
 
-## 7、rvm命令使用
+## 7、使用RVM（Ruby Version Manager）
+
+
+
+### （1）安装RVM
+
+下载RVM的稳定版本[^5]
+
+```shell
+$ \curl -sSL https://get.rvm.io | bash -s stable
+```
+
+根据完成的提示，执行下面命令，让rvm命令生效
+
+```shell
+$ source /Users/wesley_chen/.rvm/scripts/rvm
+```
+
+
+
+### （2）rvm命令使用
+
+// TODO 参考evernote
+
+
+
+
 
 
 
@@ -591,5 +617,5 @@ https://gems.ruby-china.com/
 
 [^4]:https://stackoverflow.com/a/2991254
 
-
+[^5]:https://rvm.io/rvm/install
 
