@@ -356,9 +356,70 @@ But all forgot there is another option.
 Only at the end of a file, of course.
 ```
 
-> 示例代码，见block_comment.rb
+> 示例代码，见comment_block.rb
 
 
+
+### （5）Ruby方法的block参数[^6]
+
+
+
+#### a. Ruby方法传block参数
+
+
+
+Ruby方法可以使用block传参，需要使用`yield`以及`block_given?`来调用和检查block。
+
+* `yield`，在ruby方法中使用`yield`调用block，可以将block需要的参数，传给`yield`
+* `block_given?`，用于检查方法的参数中是否block传入。如果不检查，传入非block参数，用`yield`调用会出现异常
+
+举个例子，如下
+
+```ruby
+def my_method
+  puts "reached the top"
+  # Note: call the block parameter by using `yield`
+  status = yield("John", 2) if block_given?
+  puts "reached the bottom"
+  puts "status code: #{status}"
+end
+
+my_method do |name, age|
+  puts "Hello, #{name} in #{age} years old"
+  puts "reached yield"
+  1
+end
+```
+
+
+
+#### b. Ruby方法同时传正常参数和block参数
+
+Ruby方法允许同时传正常参数和block参数，但是block参数有且仅有一个[^6]，而且总是在最后一个。
+
+举个例子，如下
+
+```ruby
+def my_map(array)
+  new_array = []
+
+  for element in array
+    new_array.push yield element if block_given?
+  end
+
+  new_array
+end
+
+result = my_map([1, 2, 3]) do |number|
+  number * 2
+end
+
+puts result
+```
+
+my_map方法，实际上接收两个参数，一个参数是数组，另一个参数是block
+
+> 示例代码，见block_4_method_normal_parameter_and_block_parameter.rb
 
 
 
@@ -619,3 +680,4 @@ $ source /Users/wesley_chen/.rvm/scripts/rvm
 
 [^5]:https://rvm.io/rvm/install
 
+[^6]:https://stackoverflow.com/questions/2463612/passing-multiple-code-blocks-as-arguments-in-ruby
