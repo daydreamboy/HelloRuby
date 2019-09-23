@@ -14,6 +14,7 @@ class GitBatch
   attr_accessor :subcommands
   attr_accessor :configuration
   attr_accessor :debugging
+  attr_accessor :force_command
 
   def initialize
     self.global = OptionParser.new do |parser|
@@ -32,6 +33,10 @@ class GitBatch
 
       parser.on("-c", "--configuration [path/to/<config>.json]", String, "The configuration file path") do |file_path|
         $CONFIG_FILE_PATH = file_path
+      end
+
+      parser.on("-f", "--force [command]", String, "The git command to force execute") do |command|
+        self.force_command = command
       end
     end
 
@@ -142,6 +147,11 @@ class GitBatch
 
     subcommandline = ARGV.join(' ')
     subcommand = ARGV.shift
+
+    if not self.force_command.nil?
+      run_git_command self.force_command
+      return
+    end
 
     if self.subcommands[subcommand].nil?
       puts global.help
