@@ -465,6 +465,42 @@ Ruby内置提供json库，`require 'json'`。
 
 
 
+### （3）获取shell command输出结果[^7]
+
+
+
+一般有下面几种方式，执行命令，但是都不能完全得到命令的正常输出以及错误输出。
+
+```ruby
+exec("echo 'hello world'") # exits from ruby, then runs the command
+system('echo', 'hello world') # returns the status code
+sh('echo', 'hello world') # returns the status code
+`echo "hello world"` # returns stdout
+%x[echo 'hello world'] # returns stdout
+```
+
+
+
+可以使用`Open3.capture3`方法，获取三个返回值。举个例子，如下
+
+```ruby
+require 'open3'
+stdout, stderr, status = Open3.capture3("ls")
+if status.success?
+  # success
+else
+  # failure
+end
+```
+
+
+
+> `Open3`库是Ruby内置库，可以直接使用。示例代码，见07_git-batch.rb
+
+
+
+
+
 ## 4、常用Ruby Tips
 
 ### （1）Shell和Ruby脚本通信
@@ -681,3 +717,4 @@ $ source /Users/wesley_chen/.rvm/scripts/rvm
 [^5]:https://rvm.io/rvm/install
 
 [^6]:https://stackoverflow.com/questions/2463612/passing-multiple-code-blocks-as-arguments-in-ruby
+[^7]:https://www.honeybadger.io/blog/capturing-stdout-stderr-from-shell-commands-via-ruby/

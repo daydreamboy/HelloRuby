@@ -4,6 +4,7 @@
 
 require 'optparse'
 require 'json'
+require 'open3'
 # require_relative '../ruby_tool/dump_tool'
 
 $CONFIG_FILE_PATH = './git-batch_config.json'
@@ -106,8 +107,13 @@ class GitBatch
         if self.debugging then
           puts "[Debug] #{cmd}"
         else
-          content = `#{cmd}`
-          puts content
+          stdout, stderr, status = Open3.capture3("#{cmd}")
+          if status.success?
+            puts stdout
+          else
+            puts "\033[31m#{stdout}\033[0m"
+            puts "\033[31m#{stderr}\033[0m"
+          end
         end
 
         puts
