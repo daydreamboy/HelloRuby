@@ -155,11 +155,13 @@ class GitBatch
     subcommand = ARGV.shift
 
     if not self.force_command.nil?
-      run_git_command self.force_command
+      run_git_command [self.force_command, subcommandline].join(' ')
       return
     end
 
     if self.subcommands[subcommand].nil?
+      puts "\033[31m[Error] #{subcommand} command not available. #{ self.subcommands.keys.join(', ') } are available.\033[0m"
+      puts
       puts global.help
       return
     else
