@@ -18,28 +18,6 @@ class GitBatch
   attr_accessor :force_command
 
   def initialize
-    self.global = OptionParser.new do |parser|
-      parser.banner = "Usage: #{__FILE__} <git subcommand> [-options] argument"
-      parser.separator  ""
-      parser.separator  "git批量工具"
-      parser.separator  ""
-      parser.separator  "示例：ruby /path/to/07_git-batch.rb log -d 10"
-      parser.separator  ""
-      parser.separator  "查看帮助：ruby /path/to/07_git-batch.rb --help"
-
-      # Boolean switch.
-      parser.on("-d", "--[no-]debug", "Run with debug info") do |enabled|
-        self.debugging = enabled
-      end
-
-      parser.on("-c", "--configuration [path/to/<config>.json]", String, "The configuration file path") do |file_path|
-        $CONFIG_FILE_PATH = file_path
-      end
-
-      parser.on("-f", "--force [command]", String, "The git command to force execute") do |command|
-        self.force_command = command
-      end
-    end
 
     self.subcommands = {
         # Note: configure more subcommand here...
@@ -95,6 +73,31 @@ class GitBatch
             end
         },
     }
+
+    self.global = OptionParser.new do |parser|
+      parser.banner = "Usage: #{__FILE__} <git subcommand> [-options] argument"
+      parser.separator  ""
+      parser.separator  "git批量工具"
+      parser.separator  ""
+      parser.separator  "示例：ruby /path/to/07_git-batch.rb log -d 10"
+      parser.separator  ""
+      parser.separator  "内置子命令如下#{self.subcommands.keys}"
+      parser.separator  ""
+      parser.separator  "查看帮助：ruby /path/to/07_git-batch.rb --help"
+
+      # Boolean switch.
+      parser.on("-d", "--[no-]debug", "Run with debug info") do |enabled|
+        self.debugging = enabled
+      end
+
+      parser.on("-c", "--configuration <path/to/<config>.json>", String, "The configuration file path") do |file_path|
+        $CONFIG_FILE_PATH = file_path
+      end
+
+      parser.on("-f", "--force [subcommand]", String, "The git subcommand to force execute, e.g. git-batch.rb -f checkout -- -b new_branch") do |command|
+        self.force_command = command
+      end
+    end
   end
 
   def run_git_command(subcommandline)
