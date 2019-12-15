@@ -544,7 +544,7 @@ $ ruby -e "system('export foo=bar')"; echo $foo
 $ (empty here)
 ```
 
-借助shell的`eva`l函数和<code>\`command`</code>函数，如下
+借助shell的`eval`函数和<code>\`command`</code>函数，如下
 
 ```shell
 $ eval `ruby -e "puts 'export foo=bar'"`; echo $foo
@@ -568,6 +568,30 @@ echo "ruby_secret3 = $ruby_secret3"
 示例代码，见05_export_env_var_from_script_to_shell.rb/sh
 
 
+
+### （2）Ruby代码嵌入到Shell脚本中[^8]
+
+在Shell脚本中使用heredoc语法可以执行内嵌的Ruby代码，例如
+
+```shell
+#!/usr/bin/env bash
+
+echo "This is bash!"
+
+/usr/bin/ruby <<EOF
+
+puts 'This is ruby!'
+
+def dump_object(arg)
+  puts "[Debug] (#{arg.class}) #{arg.inspect}"
+end
+
+dump_object("a")
+
+EOF
+```
+
+> 示例见HelloShellScripts的18_ruby_code_within_shell.sh
 
 
 
@@ -718,3 +742,7 @@ $ source /Users/wesley_chen/.rvm/scripts/rvm
 
 [^6]:https://stackoverflow.com/questions/2463612/passing-multiple-code-blocks-as-arguments-in-ruby
 [^7]:https://www.honeybadger.io/blog/capturing-stdout-stderr-from-shell-commands-via-ruby/
+[^8]:https://www.devdungeon.com/content/enhanced-shell-scripting-ruby#toc-15
+
+
+
