@@ -8,6 +8,7 @@ DOC
 require 'optparse'
 require 'open3'
 require 'colored2'
+require 'benchmark'
 
 #require_relative '../ruby_tool/ruby_tools'
 
@@ -146,4 +147,9 @@ class NmUtility
   end
 end
 
-NmUtility.new.run
+# @see https://stackoverflow.com/a/29166478
+time = Benchmark.measure {
+  NmUtility.new.run
+}
+
+puts "Completed with #{time.real} s.".magenta
