@@ -5,13 +5,15 @@
 require 'optparse'
 require 'json'
 require 'open3'
+require 'colored2'
+require 'benchmark'
 # require_relative '../ruby_tool/dump_tool'
 
 $CONFIG_FILE_PATH = './git-batch_config.json'
 $CONFIG_KEY_GIT_REPO_LIST = 'git_repo_list'
 
 class GitBatch
-  attr_accessor :global
+  attr_accessor :globalParser
   attr_accessor :subcommands
   attr_accessor :configuration
   attr_accessor :debugging
@@ -74,7 +76,7 @@ class GitBatch
         },
     }
 
-    self.global = OptionParser.new do |parser|
+    self.globalParser = OptionParser.new do |parser|
       parser.banner = "Usage: #{__FILE__} <git subcommand> [-options] argument"
       parser.separator  ""
       parser.separator  "git批量工具"
@@ -90,7 +92,10 @@ class GitBatch
         self.debugging = enabled
       end
 
-      parser.on("-c", "--configuration <path/to/<config>.json>", String, "The configuration file path") do |file_path|
+      parser.on("-c", "--configuration <path/to/config.json>", String,
+                "The configuration json file decides those git repos should apply batch command which placed beside ",
+                "the git repos.",
+                "The default file path is #{$CONFIG_FILE_PATH} if not use -c option.") do |file_path|
         $CONFIG_FILE_PATH = file_path
       end
 
@@ -138,12 +143,12 @@ class GitBatch
 
   def run
     if ARGV.empty?
-      puts global.help
+      puts globalParser.help
       return
     end
 
     # Note: parse first level command
-    self.global.order!
+    self.globalParser.order!
 
     config_file_path = File.join '.', $CONFIG_FILE_PATH
     if File.exist? config_file_path
@@ -165,7 +170,7 @@ class GitBatch
     if self.subcommands[subcommand].nil?
       puts "\033[31m[Error] #{subcommand} command not available. #{ self.subcommands.keys.join(', ') } are available.\033[0m"
       puts
-      puts global.help
+      puts globalParser.help
       return
     else
       if not self.subcommands[subcommand][:optParser].nil?
@@ -179,4 +184,8 @@ class GitBatch
   end
 end
 
-GitBatch.new.run
+time = Benchmark.measure {
+  GitBatch.new.run
+}
+
+puts "Completed with #{time.real} s.".magenta
