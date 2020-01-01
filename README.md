@@ -449,23 +449,7 @@ my_map方法，实际上接收两个参数，一个参数是数组，另一个�
 
 
 
-
-
-### （2）JSON解析
-
-#### json库
-
-Ruby内置提供json库，`require 'json'`。
-
-* JSON String转Object，`JSON.parse`
-
-* Object转JSON String，`JSON.dump`或者`JSON.pretty_generate`。如果需要自定义格式输出JSON字符串，使用`JSON.pretty_generate`
-
-示例代码见json_serialization.rb
-
-
-
-### （3）获取shell command输出结果[^7]
+### （2）获取shell command输出结果[^7]
 
 
 
@@ -496,6 +480,46 @@ end
 
 
 > `Open3`库是Ruby内置库，可以直接使用。示例代码，见07_git-batch.rb
+
+
+
+## 3、常用Ruby库
+
+
+
+### （1）JSON解析
+
+#### json库
+
+Ruby内置提供json库，`require 'json'`。
+
+- JSON String转Object，`JSON.parse`
+- Object转JSON String，`JSON.dump`或者`JSON.pretty_generate`。如果需要自定义格式输出JSON字符串，使用`JSON.pretty_generate`
+
+> 示例代码见json_serialization.rb
+
+
+
+### （2）命令行参数解析
+
+#### optparse库
+
+Ruby内置提供optparse库，`require 'optparse'`。
+
+
+
+* OptionParser的on方法，如果选项的注释需要多行时，可以分成多个参数，传给on方法[^9]，例如
+
+```ruby
+parser.on("-c", "--configuration <path/to/config.json>", String,
+          "The configuration json file decides those git repos should apply batch command which placed beside ",
+          "the git repos.",
+          "The default file path is #{$CONFIG_FILE_PATH} if not use -c option.") do |file_path|
+  $CONFIG_FILE_PATH = file_path
+end
+```
+
+> 示例代码见07_git-batch.rb
 
 
 
@@ -743,6 +767,8 @@ $ source /Users/wesley_chen/.rvm/scripts/rvm
 [^6]:https://stackoverflow.com/questions/2463612/passing-multiple-code-blocks-as-arguments-in-ruby
 [^7]:https://www.honeybadger.io/blog/capturing-stdout-stderr-from-shell-commands-via-ruby/
 [^8]:https://www.devdungeon.com/content/enhanced-shell-scripting-ruby#toc-15
+
+[^9]:https://stackoverflow.com/questions/29229059/how-to-best-wrap-ruby-optparse-code-and-output
 
 
 
