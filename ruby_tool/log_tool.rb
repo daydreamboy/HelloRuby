@@ -11,7 +11,7 @@
 require 'logger'
 require 'colored2'
 
-# 2. A class for logging message on diferrent level
+# 2. A class for logging message on different level
 #
 # Usage:
 #   Log.i, Log.d, Log.e, Log.w
@@ -25,23 +25,43 @@ class Log
   @@logger = Logger.new(STDOUT)
   @@logger.level = Logger::DEBUG
 
+  ##
+  # Info
   def self.i(msg)
     # @@logger.info(msg)
     puts msg
   end
 
+  ##
+  # Verbose
+  def self.v(msg)
+    puts "[Verbose] #{msg}".blue
+  end
+
+  ##
+  # Debug
   def self.d(msg)
     # @@logger.debug(msg)
-    puts msg.blue
+    puts "[Debug] #{msg}".cyan
   end
 
+  ##
+  # Warning
   def self.w(msg)
     # @@logger.warn(msg)
-    puts msg.yellow
+    puts "[Warning] #{msg}".yellow
   end
 
+  ##
+  # Error
   def self.e(msg)
     # @@logger.error(msg)
-    puts msg.red
+    puts "[Error] #{msg}".red
+  end
+
+  ##
+  # Timing
+  def self.t(msg)
+    puts "[Measure] #{msg}".magenta
   end
 end
