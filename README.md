@@ -53,9 +53,150 @@ irb中输出，如下
  => Proc 
 ```
 
+> 示例代码见data_type.rb
 
 
-示例代码见data_type.rb
+
+#### String
+
+
+
+##### sub方法和gsub方法
+
+String提供sub实例方法和gsub实例方法，用字符串替换。
+
+* sub实例方法，只替换满足匹配的首个字符串
+* gsub（global sub）实例方法，全局替换满足匹配的所有字符串
+
+> sub和gsub方法，对应有修改入参字符串的版本：sub!和gsub!方法
+
+
+
+以gsub方法为例，其方法签名，如下
+
+```ruby
+gsub(pattern, replacement) → new_str
+gsub(pattern, hash) → new_str
+gsub(pattern) {|match| block } → new_str
+gsub(pattern) → enumerator
+```
+
+pattern参数，可以是字符串或者Regexp对象。
+
+举个例子，如下
+
+```ruby
+def gsub_with_string_pattern(string)
+  string.gsub('potato', 'banana')
+end
+
+def gsub_with_Regexp_pattern(string)
+  string.gsub(/p[a-zA-Z]+o/, 'banana')
+end
+
+def gsub_with_Regexp_pattern_anchored(string)
+  string.gsub(/^p[a-zA-Z]+o$/, 'banana')
+end
+
+dump_object(gsub_with_string_pattern("One potato, two potato, three potato, four."))
+dump_object(gsub_with_Regexp_pattern("One potato, two potato, three potato, four."))
+dump_object(gsub_with_Regexp_pattern_anchored("One potato, two potato, three potato, four."))
+```
+
+注意，pattern参数是字符串，即使字符串是正则表达式，不会按照正则匹配。举个例子，如下
+
+```ruby
+def gsub_with_string_pattern_literal(string)
+  string.gsub('\d+', "[number]")
+end
+
+dump_object(gsub_with_string_pattern_literal("ff001.png"))
+dump_object(gsub_with_string_pattern_literal('pattern is \d+')) # output: "pattern is [number]"
+```
+
+
+
+##### gsub方法的capture group
+
+gsub方法，支持将满足正则匹配的字符串换成动态的捕获变量值。举个例子，如下
+
+```ruby
+def regexp_capture_group(string)
+  string.gsub(/(\d+)/, '\1')
+end
+
+def regexp_capture_group_anchored(string)
+  string.gsub(/[a-zA-Z]*(\d+)/, '\1')
+end
+
+dump_object(regexp_capture_group('aaa074')) # output: "aaa074"
+dump_object(regexp_capture_group_anchored('aaa074')) # output: "074"
+```
+
+* aaa074按照`/(\d+)/`匹配，满足匹配的是074换成捕获变量值074，所以最终替换后的字符串是aaa074
+* aaa074按照`/[a-zA-Z]*(\d+)/`匹配，满足匹配的是aaa074换成捕获变量值074，所以最终替换后的字符串是074
+
+
+
+#### Regexp
+
+Regexp类用于表示正则表达式。
+
+
+
+##### 初始化Regexp
+
+Regexp初始化有三种方式
+
+* /xxx/方式
+* %r{xxx}方式
+* 使用new方法的方式
+
+举个例子，如下
+
+```ruby
+def create_with_forward_slashes
+  return /hay/
+end
+
+def create_with_r_percent_literal
+  return %r{hay}
+end
+
+def create_with_new
+  return Regexp.new('hay')
+end
+```
+
+> 示例方法，见data_type_Regexp_create.rb
+
+
+
+##### match方法
+
+Regexp实例提供match方法，用于匹配字符串。如果存在匹配，则该方法返回MatchData实例，否则返回nil。
+
+举个例子，如下
+
+```ruby
+def create_with_forward_slashes
+  return /hay/
+end
+
+match_data = create_with_forward_slashes.match('haystack')
+
+dump_object(match_data)
+dump_object("original string: #{match_data.string}")
+dump_object("matched string: #{match_data.to_s}")
+```
+
+MatchData的string方法返回原始需要匹配的字符串，而to_s方法返回满足匹配的字符串。
+
+
+
+
+
+
 
 
 
