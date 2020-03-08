@@ -628,11 +628,9 @@ end
 
 
 
-### （1）JSON解析
+### （1）json库
 
-#### json库
-
-Ruby内置提供json库，`require 'json'`。
+Ruby内置提供json库
 
 - JSON String转Object，`JSON.parse`
 - Object转JSON String，`JSON.dump`或者`JSON.pretty_generate`。如果需要自定义格式输出JSON字符串，使用`JSON.pretty_generate`
@@ -641,26 +639,432 @@ Ruby内置提供json库，`require 'json'`。
 
 
 
-### （2）命令行参数解析
+### （2）optparse库
 
-#### optparse库
-
-Ruby内置提供optparse库，`require 'optparse'`。
+Ruby内置提供optparse库，该库中OptionParse类，用于解析CLI参数。
 
 
 
-* OptionParser的on方法，如果选项的注释需要多行时，可以分成多个参数，传给on方法[^9]，例如
+#### 介绍CLI参数
+
+CLI（Command Line Interface）定义命令行工具的参数协议，对于命令行参数分为下面两种
+
+* optional argument，可选参数（也可以配置为必选），多个可选参数和顺序无关，示例格式为`-h`或`--help`。
+* positionnal argument，固定参数（可以必选或可选），多个固定参数和顺序有关
+
+说明
+
+> 可选参数的参数，称为parameter，示例如`--level 2`。
+
+
+
+#### 基本用法
+
+创建OptionParse对象时，配置on方法回调，最后调用parse方法或parse!方法，完成对CLI参数解析。
 
 ```ruby
-parser.on("-c", "--configuration <path/to/config.json>", String,
-          "The configuration json file decides those git repos should apply batch command which placed beside ",
-          "the git repos.",
-          "The default file path is #{$CONFIG_FILE_PATH} if not use -c option.") do |file_path|
-  $CONFIG_FILE_PATH = file_path
+require 'optparse'
+
+options = {}
+OptionParser.new do |opts|
+  opts.banner = "Usage: example.rb [options]"
+
+  opts.on("-v", "--[no-]verbose", "Run verbosely") do |v|
+    options[:verbose] = v
+  end
+end.parse!
+
+p options
+p ARGV
+```
+
+> 示例代码，见optparse_use_OptionParser.rb
+
+​     
+
+​       ruby脚本的接收接收CLI参数，都在ARGV变量中。在调用parse方法或parse!方法之前，ARGV中是完整CLI参数数组。parse方法和parse!方法的区别在于
+
+* parse方法，不修改ARGV，调用后ARGV依然是完整CLI参数数组
+* parse!方法，修改ARGV，调用后ARGV不是完整CLI参数数组，而过滤掉optional arguments之后的数组。
+
+修改上面脚本的parse方法，分别执行，结果如下
+
+```shell
+# call parse
+$ ruby optparse_use_OptionParser.rb hello -v
+{}
+["hello", "-v"]
+
+# call parse!
+ruby optparse_use_OptionParser.rb hello -v
+{:verbose=>true}
+["hello"]
+```
+
+​       一般需要调用parse!方法，将optional arguments和positional arguments分别存储到Hash对象（例如上面的options）和ARGV中。
+
+
+
+如果CLI参数有OptionParser没有定义的optional arguments，则执行命令会报错，例如
+
+```shell
+ruby optparse_use_OptionParser.rb hello -v -d 12
+Traceback (most recent call last):
+optparse_use_OptionParser.rb:10:in `<main>': invalid option: d (OptionParser::InvalidOption)
+optparse_use_OptionParser.rb:10:in `<main>': invalid option: -d (OptionParser::InvalidOption)
+```
+
+
+
+CLI参数有可以多个positional arguments，例如
+
+```shell
+$ ruby optparse_use_OptionParser.rb -v hello hello2 hello3
+{:verbose=>true}
+["hello", "hello2", "hello3"]
+```
+
+
+
+#### 获取所有positional arguments和optional arguments
+
+获取所有positional arguments和optional arguments，有两种方法
+
+* 在on方法回调中，设置到Hash对象中。
+
+```ruby
+require 'optparse'
+
+options = {}
+OptionParser.new do |opts|
+  opts.banner = "Usage: example.rb [options]"
+
+  opts.on('-a') do |v|
+    options[:a] = v
+  end
+
+  opts.on('-b NUM') do |v|
+    options[:b] = v
+  end
+
+  opts.on("-v", "--[no-]verbose", "Run verbosely") do |v|
+    options[:verbose] = v
+  end
+end.parse!
+
+p options
+p ARGV
+```
+
+这种方式，比较细粒度控制每个optional argument的解析，可以在回调block中自定义设置的值。
+
+执行结果，如下
+
+```shell
+$ ruby optparse_get_positional_and_optional_arguments_by_on_method.rb -a -b 3 -v hello hello2
+{:a=>true, :b=>"3", :verbose=>true}
+["hello", "hello2"]
+```
+
+> 示例代码，见optparse_get_positional_and_optional_arguments_by_on_method.rb
+
+
+
+* 在parse!方法的into参数设置到Hash对象。这种方式比较简单，不用设置每个on方法的回调block
+
+```ruby
+require 'optparse'
+
+options = {}
+OptionParser.new do |opts|
+  opts.on('-a')
+  opts.on('-b NUM', Integer)
+  opts.on('-v', '--verbose')
+end.parse!(into: options)
+
+p options
+p ARGV
+```
+
+执行结果，如下
+
+```shell
+$ ruby optparse_get_positional_and_optional_arguments_by_on_method.rb -a -b 3 -v hello hello2
+{:a=>true, :b=>"3", :verbose=>true}
+["hello", "hello2"]
+```
+
+> 示例代码，见optparse_get_positional_and_optional_arguments_by_parse_method.rb
+
+
+
+#### optional参数的格式
+
+OptionParser解析optional参数，按照一定格式约定来解析。
+
+* 按照可选参数的名字，是否简写来分类
+* 按照可选参数的parameter，是否可选或者没有值来分类
+
+如下表
+
+|            | 必填parameter                                | 可选parameter         | 无parameter |
+| ---------- | -------------------------------------------- | --------------------- | ----------- |
+| 非简写参数 | "--switch=MANDATORY" or "--switch MANDATORY" | "--switch[=OPTIONAL]" | "--switch"  |
+| 简写参数   | "-xMANDATORY"                                | "-x[OPTIONAL]"        | "-x"        |
+
+说明
+
+> 1. 简写参数，以`-`为前缀，认第一个字母为简写参数，例如-xMANDATORY，x为简写参数，而MANDATORY没有强制全部大写或者采用驼峰命名
+> 2. 非简写参数，以`--`前缀，都支持非歧义下，非完整匹配。例如`--switch`等价于`--sw`、`--switc`，甚至等价于简写参数`-s`。有必填parameter或可选parameter，也是一样，`--switch=on`等价于`--sw=on`、`--switc=on`
+
+
+
+##### 无parameter
+
+无parameter一般用于标识flag值，存储为true和false。
+
+```ruby
+require 'optparse'
+
+options = {}
+OptionParser.new do |opts|
+  opts.on('--verbose')
+  opts.on('--abort')
+end.parse!(into: options)
+
+p options
+p ARGV
+```
+
+执行结果，如下
+
+```shell
+# Case 1
+$ ruby optparse_optional_argument_no_parameter.rb --abort --verbose
+{:abort=>true, :verbose=>true}
+[]
+# Case 2
+$ ruby optparse_optional_argument_no_parameter.rb --ab --ver     
+{:abort=>true, :verbose=>true}
+[]
+# Case 3
+$ ruby optparse_optional_argument_no_parameter.rb -a -v 
+{:abort=>true, :verbose=>true}
+[]
+# Case 4
+$ ruby optparse_optional_argument_no_parameter.rb -ab -ver  
+Traceback (most recent call last):
+optparse_optional_argument_no_parameter.rb:7:in `<main>': invalid option: b (OptionParser::InvalidOption)
+optparse_optional_argument_no_parameter.rb:7:in `<main>': invalid option: -b (OptionParser::InvalidOption)
+```
+
+可以看出
+
+* CLI参数的完整形式，支持非歧义下的前缀匹配（Case 1和Case 2）
+* CLI参数的简写形式，只匹配首个字母（Case 3和Case 4）
+
+> 示例代码，见optparse_optional_argument_no_parameter.rb
+
+
+
+##### 必填parameter
+
+```ruby
+require 'optparse'
+
+options = {}
+OptionParser.new do |opts|
+  opts.on('--verbose=FLAG')
+  opts.on('-aflag')
+end.parse!(into: options)
+
+p options
+p ARGV
+```
+
+执行结果，如下
+
+```shell
+$ ruby optparse_optional_argument_required_parameter.rb -v -a
+{:verbose=>"-a"}
+[]
+
+$ ruby optparse_optional_argument_required_parameter.rb -aBBBB -ver AAA
+{:a=>"BBBB", :verbose=>"er"}
+["AAA"]
+
+$ ruby optparse_optional_argument_required_parameter.rb -aBBBB --ver AAA
+{:a=>"BBBB", :verbose=>"AAA"}
+[]
+```
+
+> 示例代码，见optparse_optional_argument_required_parameter.rb
+
+
+
+##### 可选parameter
+
+```ruby
+require 'optparse'
+
+options = {}
+OptionParser.new do |opts|
+  opts.on('--verbose[=XXX]')
+  opts.on('-a[YYY]')
+end.parse!(into: options)
+
+p options
+p ARGV
+```
+
+执行结果，如下
+
+```shell
+# Case 1
+$ ruby optparse_optional_argument_optional_parameter.rb --ver -a 
+{:verbose=>nil, :a=>nil}
+[]
+
+# Case 2
+$ ruby optparse_optional_argument_optional_parameter.rb --ver -a10 
+{:verbose=>nil, :a=>"10"}
+[]
+
+# Case 3
+$ ruby optparse_optional_argument_optional_parameter.rb --ver -a 10
+{:verbose=>nil, :a=>nil}
+["10"]
+```
+
+Ruby 2.6.3p62版本，似乎存在bug，Case 2和Case 3解析结果不一样。
+
+> 示例代码，见optparse_optional_argument_optional_parameter.rb
+
+
+
+#### 完整的on方法参数
+
+on方法对于参数顺序没有要求，但是对于参数的值有一定格式规范
+
+* 简写形式，必须以`-`为前缀，而且支持parameter的三种形式：none、required、optional
+* 非简写形式必须以`--`为前缀，而且支持parameter的三种形式：none、required、optional
+* 类型（例如String）。支持将parameter转成特定类型的值。如果不指定，parameter为none类型，存储为true/nil；parameter为required或optional类型，存储为String/nil
+* 其他字符串，则认为是对该可选参数的描述。如果参数的描述太长，可以分成几个参数[^9]。
+  * 示例代码，见optparse_parameter_Array.rb
+
+
+
+举个必填parameter的optional argument的例子，如下
+
+```ruby
+require 'optparse'
+
+options = {}
+OptionParser.new do |opts|
+  opts.on('--require LIB', '-r', 'Specify your library', String)
+end.parse!(into: options)
+
+p options
+p ARGV
+```
+
+> 示例代码，见optparse_on_method.rb
+
+
+
+#### parameter参数的类型
+
+parameter参数的类型，可以是下面几种
+
+* Bool
+* Integer
+* String
+* Float
+* Array
+
+
+
+举个例子，如下
+
+```ruby
+require 'optparse'
+
+options = {}
+OptionParser.new do |opts|
+  opts.on("-v", "--verbose")
+  opts.on("-i", "--integer", Integer, '=integer')
+  opts.on("-p", "--path", String, '=path')
+  opts.on("-d", "--decimal", Float, '=decimal')
+
+  # Note: take a list of opts (must have a opt at least)
+  opts.on("-l", "--list x,y", Array,
+          "This command flag takes a comma separated list (without",
+          "spaces) of values and turns it into an array. This requires",
+          "at least one argument.")
+end.parse!(into: options)
+
+p options
+p ARGV
+```
+
+> 示例代码，见optparse_parameter_type.rb
+
+执行结果，如下
+
+```shell
+$ ruby optparse_parameter_type.rb -v -i 3 -p hello -d 3.14 -l 1,2,3,4 1 2 3 4
+{:verbose=>true, :integer=>3, :path=>"hello", :decimal=>3.14, :list=>["1", "2", "3", "4"]}
+["1", "2", "3", "4"]
+```
+
+说明
+
+> 1. on方法的参数，简写参数和非简写参数采用parameter为none的方式，但是补充上'=integer'（或'=[integer]'）表示是required或optional
+> 2. `--list x,y`不支持--list 1 2 3 4，只能是--list 1,2,3,4
+
+
+
+#### 优化OptionParser的错误提示
+
+OptionParser解析可选参数出错，一般会给出下面提示，如下
+
+```shell
+$ ruby optparse_on_method.rb -r
+Traceback (most recent call last):
+optparse_on_method.rb:6:in `<main>': missing argument: -r (OptionParser::MissingArgument)
+```
+
+这个提示和普通CLI程序相比还是不够友好。因此需要捕获这里的异常，并重新给出提示。
+
+```ruby
+require 'optparse'
+
+options = {}
+
+begin
+  OptionParser.new do |opts|
+    opts.on('--require LIB', '-r', 'Specify your library', String)
+  end.parse!(into: options)
+
+  p options
+  p ARGV
+rescue OptionParser::ParseError => e
+  puts "#{e.message}"
 end
 ```
 
-> 示例代码见07_git-batch.rb
+> 示例代码，见optparse_pretty_error_prompt.rb
+
+执行结果，如下
+
+```shell
+$ ruby optparse_pretty_error_prompt.rb -r
+missing argument: -r
+```
+
+说明
+
+> OptionParser的异常有好几种，例如OptionParser::MissingArgument，但是可以查看源码发现，它们都是继承自OptionParser::ParseError，所以捕获类型设置OptionParser::ParseError
 
 
 
