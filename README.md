@@ -194,7 +194,17 @@ MatchData的string方法返回原始需要匹配的字符串，而to_s方法返�
 
 
 
+#### File
 
+用于操作文件或目录
+
+
+
+##### 重命名文件或文件夹[^10]
+
+```ruby
+File.rename './my-directory', './my-renamed-directory'
+```
 
 
 
@@ -1068,8 +1078,6 @@ missing argument: -r
 
 
 
-
-
 ## 4、常用Ruby Tips
 
 ### （1）Shell和Ruby脚本通信
@@ -1314,6 +1322,8 @@ $ source /Users/wesley_chen/.rvm/scripts/rvm
 [^8]:https://www.devdungeon.com/content/enhanced-shell-scripting-ruby#toc-15
 
 [^9]:https://stackoverflow.com/questions/29229059/how-to-best-wrap-ruby-optparse-code-and-output
+
+[^10]:https://stackoverflow.com/a/6738955
 
 
 
