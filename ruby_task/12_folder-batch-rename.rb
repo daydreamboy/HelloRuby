@@ -3,7 +3,7 @@
 #encoding: utf-8
 
 require 'optparse'
-require_relative './12_folder-batch_log'
+require_relative '../ruby_tool/log_tool'
 
 class Subcommand_rename
 
@@ -11,7 +11,7 @@ class Subcommand_rename
 
   def self.create_subcommand
     return OptionParser.new do |opts|
-      opts.banner = "Usage: rename [options] -p 'pattern' -o 'new_filename' path/to/folder"
+      opts.banner = "Usage: rename [options] -p 'pattern' -o 'new_folder' path/to/folder"
       opts.separator ""
       opts.separator "Examples:"
       opts.separator "ruby 12_folder-batch.rb rename -v -p '([0-9]+).*' -o '\\1_new.imageset' ./xxx.bundle"
@@ -33,8 +33,7 @@ class Subcommand_rename
         @@options[:pattern] = v
       end
 
-      opts.on("-o", "--output=new_filename", "The new file name, e.g. '\\1.png', which '\\1' ",
-                "for the first captured group") do |v|
+      opts.on("-o", "--output=new_folder", "The new folder name, e.g. '\\1.imageset' which '\\1' for the first captured group") do |v|
         @@options[:output] = v
       end
     end
@@ -70,20 +69,21 @@ class Subcommand_rename
       next if item == '.' or item == '..'
 
       if File.directory?(item) && File.exist?(item)
-        filename = File.basename(item)
-        if regexp.match?(filename)
-          modified_filename = filename.gsub(regexp, @@options[:output])
+        folder_name = File.basename(item)
+        if regexp.match?(folder_name)
+          modified_folder_name = folder_name.gsub(regexp, @@options[:output])
         else
-          Log.w "The pattern #{regexp} not match the #{filename}. Skip it."
+          Log.w "The pattern #{regexp} not match the #{folder_name}. Skip it."
           next
         end
 
         if @@options[:debug]
-          Log.d "`#{filename}` to `#{modified_filename}`"
+          Log.d "`#{folder_name}` to `#{modified_folder_name}`"
         else
-          File.rename(item, dir_path + "/" + modified_filename)
+          dest_path = dir_path + "/" + modified_folder_name
+          File.rename(item, dest_path)
           if @@options[:verbose]
-            Log.v "Renaming #{item} to #{dir_path + "/" + modified_filename}"
+            Log.v "Renaming #{item} to #{dest_path}"
           end
         end
 
