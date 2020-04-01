@@ -106,7 +106,7 @@ class NmUtility
 
     # Note: not use `/**/*` instead of `**{,/*/**}/*`
     # @see https://stackoverflow.com/a/2724048
-    Dir.glob(dir_path + '**{,/*/**}/*') do |item|
+    Dir.glob(dir_path + '/**{,/*/**}/*') do |item|
       next if item == '.' or item == '..'
 
       if !File.directory?(item) && File.exist?(item)
