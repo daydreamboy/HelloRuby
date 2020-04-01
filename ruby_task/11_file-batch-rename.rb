@@ -6,56 +6,49 @@ require 'optparse'
 require 'benchmark'
 require_relative '../ruby_tool/ruby_tools'
 
-class FileRenameBatchUtility
-  attr_accessor :cmd_parser
-  attr_accessor :cmd_options
+class Subcommand_rename
+  @@options = {}
 
-  def initialize
-    self.cmd_options = {}
+  def self.create_subcommand
+    return OptionParser.new do |opts|
+      opts.banner = "Usage: #{__FILE__} PATH/TO/FOLDER"
+      opts.version = "1.0"
+      opts.separator ""
+      opts.separator "在指定目录下批量重命名文件名"
+      opts.separator "Examples:"
+      opts.separator "ruby 11_file-batch.rb rename -o '\1@2x.png' -p 'f([0-9]+).png' ~/Downloads/Resources"
+      opts.separator "ruby 11_file-batch.rb rename -o '\1@2x.png' -p 'f([0-9]+).png' -d ~/Downloads/Resources"
 
-    self.cmd_parser = OptionParser.new do |parser|
-      parser.banner = "Usage: #{__FILE__} PATH/TO/FOLDER"
-      parser.version = "1.0"
-      parser.separator ""
-      parser.separator "在指定目录下批量重命名文件名"
-      parser.separator "Examples:"
-      parser.separator "ruby 10_file-batch.rb ./emoticon -p '[a-zA-Z]+([0-9]+).*' -o '\1.png'"
-      parser.separator "ruby 10_file-batch.rb ./emoticon -p '[a-zA-Z]+([0-9]+).*' -o '\1.png'"
-      parser.separator "ruby 10_file-batch.rb ./emoticon -p '[a-zA-Z]*([0-9]+).*' -o '\1@2x.png' -d"
-
-      parser.on("-v", "--[no-]verbose", "Run verbosely") do |value|
-        self.cmd_options[:verbose] = value
+      opts.on("-v", "--[no-]verbose", "Run verbosely") do |value|
+        @@options[:verbose] = value
       end
 
-      parser.on("-d", "--[no-]debug", "Run in debug mode") do |value|
-        self.cmd_options[:debug] = value
+      opts.on("-d", "--[no-]debug", "Run in debug mode") do |value|
+        @@options[:debug] = value
       end
 
-      parser.on("-p", "--pattern [regexp]", String, "The regular expression, e.g. [a-zA-Z]+([0-9]+).*") do |value|
-        self.cmd_options[:pattern] = value
+      opts.on("-p", "--pattern [regexp]", String, "The regular expression, e.g. [a-zA-Z]+([0-9]+).*") do |value|
+        @@options[:pattern] = value
       end
 
-      parser.on("-o", "--output [new_filename]", String, "The new file name, e.g. '\\1.png', which '\\1' ",
+      opts.on("-o", "--output [new_filename]", String, "The new file name, e.g. '\\1.png', which '\\1' ",
                 "for the first captured group") do |value|
-        self.cmd_options[:output] = value
+        @@options[:output] = value
       end
     end
   end
 
-  def run
-    self.cmd_parser.parse!
-
-    if ARGV.length != 1
-      Log.e "Please type a folder path as input, but the current input: #{ARGV}"
-      puts self.cmd_parser.help
+  def self.execute_subcommand(argv_list)
+    if argv_list.length > 1
+      Log.e "expected only one path, but get #{argv_list}"
       return
     end
 
-    dir_path = ARGV[0]
+    dir_path = argv_list[0]
 
-    if self.cmd_options[:debug]
-      Log.d "the current input: #{ARGV}"
-      dump_object(self.cmd_options)
+    if dir_path.length <= 0
+      Log.e "the folder path is empty: #{dir_path}"
+      return
     end
 
     if !File.directory?(dir_path)
@@ -63,40 +56,38 @@ class FileRenameBatchUtility
       return
     end
 
-    Dir.glob(dir_path + '**{,/*/**}/*') do |item|
+    pattern = "^#{@@options[:pattern]}$"
+    regexp = Regexp.new(pattern)
+
+    if @@options[:debug]
+      Log.d pattern
+      Log.d regexp
+    end
+
+    Dir.glob(dir_path + '/**{,/*/**}/*') do |item|
       next if item == '.' or item == '..'
 
       if !File.directory?(item) && File.exist?(item)
         filename = File.basename(item)
-        pattern = "^#{self.cmd_options[:pattern]}$"
-        regexp = Regexp.new(pattern)
         if regexp.match?(filename)
-          modified_filename = filename.gsub(regexp, self.cmd_options[:output])
+          modified_filename = filename.gsub(regexp, @@options[:output])
         else
           Log.w "The pattern #{regexp} not match the #{filename}. Skip it."
           next
         end
 
-        if self.cmd_options[:debug]
-          dump_object(pattern)
-          dump_object(filename)
-          dump_object(regexp)
-          dump_object(modified_filename)
+        if @@options[:debug]
+          Log.d "Renaming #{item} to #{modified_filename}"
         else
-          File.rename(item, dir_path + "/" + modified_filename)
-          if self.cmd_options[:verbose]
-            Log.v "Renaming #{item} to #{dir_path + "/" + modified_filename}"
+          dest_path = dir_path + "/" + modified_filename
+          File.rename(item, dest_path)
+          if @@options[:verbose]
+            Log.v "Renaming #{item} to #{dest_path}"
           end
         end
 
       end
     end
-
   end
 end
 
-time = Benchmark.measure {
-  FileRenameBatchUtility.new.run
-}
-
-Log.t "Completed with #{time.real} s."

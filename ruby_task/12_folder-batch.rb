@@ -12,8 +12,9 @@
 # @see https://gist.github.com/rkumar/445735
 
 require 'optparse'
+require 'benchmark'
+require 'colored2'
 require_relative './12_folder-batch-rename'
-require_relative '../ruby_tool/dump_tool'
 
 options = {}
 
@@ -25,7 +26,7 @@ See 'opt.rb SUBCOMMAND --help' for more information on a specific subcommand.
 HELP
 
 parser = OptionParser.new do |opts|
-  opts.banner = "Usage: opt.rb [options] [subcommand [options]]"
+  opts.banner = "Usage: opt.rb [options] [subcommand [options]] arguments"
   opts.on("-v", "--[no-]verbose", "Run verbosely") do |v|
     options[:verbose] = v
   end
@@ -44,6 +45,9 @@ if ARGV.length <= 0
 
 end
 
-subcommands[subcommand].create_subcommand.order!
-subcommands[subcommand].execute_subcommand(ARGV)
+time = Benchmark.measure {
+  subcommands[subcommand].create_subcommand.order!
+  subcommands[subcommand].execute_subcommand(ARGV)
+}
 
+puts "Completed with #{time.real} s.".magenta

@@ -10,22 +10,18 @@ require 'benchmark'
 require 'fileutils'
 require_relative '../ruby_tool/../ruby_tool/log_tool'
 
-class FileBatchUtility
-  attr_accessor :cmd_parser
-  attr_accessor :cmd_options
+class Subcommand_copy
 
   @@options = {}
 
-  def initialize
-
-    self.cmd_parser = OptionParser.new do |parser|
+  def self.create_subcommand
+    return OptionParser.new do |parser|
       parser.banner = "Usage: #{__FILE__} PATH/TO/FOLDER"
       parser.separator ""
       parser.separator "在指定目录下批量操作文件名"
       parser.separator "Examples:"
-      parser.separator "ruby 10_file-batch.rb ./input -p '[a-zA-Z]+([0-9]+).*' -o './xxx.bundle/\1_new.imageset/\1@2x.png'"
-      parser.separator "ruby 10_file-batch.rb ./input -p '[a-zA-Z]+([0-9]+).*' -o './xxx.bundle/\1_new.imageset/\1@2x.png' -d"
-      parser.separator "ruby 11_file-batch-copy.rb ~/Downloads/Resource -o '~/Downloads/Resource.bundle/\1_new.imageset/\1@2x.png' -p '([0-9]+)@2x.png' -d"
+      parser.separator "ruby 11_file-batch.rb copy -o '~/Downloads/Resource.bundle/\1_new.imageset/\1@2x.png' -p '([0-9]+)@2x.png' ~/Downloads/3.30"
+      parser.separator "ruby 11_file-batch.rb copy -o '~/Downloads/Resource.bundle/\1_new.imageset/\1@2x.png' -p '([0-9]+)@2x.png' -d ~/Downloads/3.30"
 
       parser.on("-v", "--[no-]verbose", "Run verbosely") do |v|
         @@options[:verbose] = v
@@ -45,15 +41,18 @@ class FileBatchUtility
     end
   end
 
-  def run
-    self.cmd_parser.parse!
-
-    if ARGV.length != 1
-      puts self.cmd_parser.help
+  def self.execute_subcommand(argv_list)
+    if argv_list.length > 1
+      Log.e "expected only one path, but get #{argv_list}"
       return
     end
 
-    dir_path = ARGV[0]
+    dir_path = argv_list[0]
+
+    if dir_path.length <= 0
+      Log.e "the folder path is empty: #{dir_path}"
+      return
+    end
 
     if !File.directory?(dir_path)
       Log.e "#{dir_path} is not a directory!"
@@ -66,7 +65,7 @@ class FileBatchUtility
     Log.d "folder search: #{dir_path}" if @@options[:debug]
     Log.d "pattern: #{pattern}, regexp: #{regexp}" if @@options[:debug]
 
-    Dir.glob(dir_path + '**{,/*/**}/*') do |item_path|
+    Dir.glob(dir_path + '/**{,/*/**}/*') do |item_path|
       next if item_path == '.' or item_path == '..'
 
       if !File.directory?(item_path) && File.exist?(item_path)
@@ -90,12 +89,6 @@ class FileBatchUtility
       end
 
     end
-
   end
+
 end
-
-time = Benchmark.measure {
-  FileBatchUtility.new.run
-}
-
-puts "Completed with #{time.real} s.".magenta
