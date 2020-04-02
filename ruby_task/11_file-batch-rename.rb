@@ -11,34 +11,38 @@ class Subcommand_rename
 
   def self.create_subcommand
     return OptionParser.new do |opts|
-      opts.banner = "Usage: #{__FILE__} PATH/TO/FOLDER"
+      opts.program_name = 'file-batch-rename'
       opts.version = "1.0"
+      opts.banner = "Usage: #{__FILE__} PATH/TO/FOLDER"
       opts.separator ""
       opts.separator "在指定目录下批量重命名文件名"
       opts.separator "Examples:"
-      opts.separator "ruby 11_file-batch.rb rename -o '\1@2x.png' -p 'f([0-9]+).png' ~/Downloads/Resources"
-      opts.separator "ruby 11_file-batch.rb rename -o '\1@2x.png' -p 'f([0-9]+).png' -d ~/Downloads/Resources"
+      opts.separator "ruby 11_file-batch.rb rename -p 'f([0-9]+).png' -o '\\1@2x.png' ~/Downloads/Resources"
+      opts.separator "ruby 11_file-batch.rb rename -p 'f([0-9]+).png' -o '\\1@2x.png' -d ~/Downloads/Resources"
 
-      opts.on("-v", "--[no-]verbose", "Run verbosely") do |value|
-        @@options[:verbose] = value
+      opts.on("-d", "--[no-]debug", "Run in debug mode, and print command but not execute it.") do |v|
+        @@options[:debug] = v
       end
 
-      opts.on("-d", "--[no-]debug", "Run in debug mode") do |value|
-        @@options[:debug] = value
+      opts.on("-o", "--output [new_filename]", String, "The new file name, e.g. '\\1.png', which '\\1' for the first captured group") do |v|
+        @@options[:output] = v
       end
 
-      opts.on("-p", "--pattern [regexp]", String, "The regular expression, e.g. [a-zA-Z]+([0-9]+).*") do |value|
-        @@options[:pattern] = value
+      opts.on("-p", "--pattern [regexp]", String, "The regular expression, e.g. [a-zA-Z]+([0-9]+).*") do |v|
+        @@options[:pattern] = v
       end
 
-      opts.on("-o", "--output [new_filename]", String, "The new file name, e.g. '\\1.png', which '\\1' ",
-                "for the first captured group") do |value|
-        @@options[:output] = value
+      opts.on("-v", "--[no-]verbose", "Run verbosely") do |v|
+        @@options[:verbose] = v
       end
     end
   end
 
   def self.execute_subcommand(argv_list)
+    if argv_list.nil? or argv_list.length == 0
+      return;
+    end
+
     if argv_list.length > 1
       Log.e "expected only one path, but get #{argv_list}"
       return

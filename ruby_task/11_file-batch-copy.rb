@@ -15,33 +15,39 @@ class Subcommand_copy
   @@options = {}
 
   def self.create_subcommand
-    return OptionParser.new do |parser|
-      parser.banner = "Usage: #{__FILE__} PATH/TO/FOLDER"
-      parser.separator ""
-      parser.separator "在指定目录下批量操作文件名"
-      parser.separator "Examples:"
-      parser.separator "ruby 11_file-batch.rb copy -o '~/Downloads/Resource.bundle/\1_new.imageset/\1@2x.png' -p '([0-9]+)@2x.png' ~/Downloads/3.30"
-      parser.separator "ruby 11_file-batch.rb copy -o '~/Downloads/Resource.bundle/\1_new.imageset/\1@2x.png' -p '([0-9]+)@2x.png' -d ~/Downloads/3.30"
+    return OptionParser.new do |opts|
+      opts.program_name = 'file-batch-copy'
+      opts.version = "1.0"
+      opts.banner = "Usage: #{__FILE__} PATH/TO/FOLDER"
+      opts.separator ""
+      opts.separator "在指定目录下批量操作文件名"
+      opts.separator "Examples:"
+      opts.separator "ruby 11_file-batch.rb copy -p '([0-9]+)@2x.png' -o '~/Downloads/Resource.bundle/\\1_new.imageset/\\1@2x.png' ~/Downloads/3.30"
+      opts.separator "ruby 11_file-batch.rb copy -p '([0-9]+)@2x.png' -o '~/Downloads/Resource.bundle/\\1_new.imageset/\\1@2x.png' -d ~/Downloads/3.30"
 
-      parser.on("-v", "--[no-]verbose", "Run verbosely") do |v|
-        @@options[:verbose] = v
-      end
-
-      parser.on("-d", "--[no-]debug", "Run in debug mode") do |v|
+      opts.on("-d", "--[no-]debug", "Run in debug mode") do |v|
         @@options[:debug] = v
       end
 
-      parser.on("-p", "--pattern=regexp", "The regular expression, e.g. [a-zA-Z]+([0-9]+).*") do |v|
+      opts.on("-o", "--output [new_filename]", String, "The new file name, e.g. '\1.png'") do |v|
+        @@options[:output] = v
+      end
+
+      opts.on("-p", "--pattern=regexp", "The regular expression, e.g. [a-zA-Z]+([0-9]+).*") do |v|
         @@options[:pattern] = v
       end
 
-      parser.on("-o", "--output [new_filename]", String, "The new file name, e.g. '\1.png'") do |v|
-        @@options[:output] = v
+      opts.on("-v", "--[no-]verbose", "Run verbosely") do |v|
+        @@options[:verbose] = v
       end
     end
   end
 
   def self.execute_subcommand(argv_list)
+    if argv_list.nil? or argv_list.length == 0
+      return;
+    end
+
     if argv_list.length > 1
       Log.e "expected only one path, but get #{argv_list}"
       return
