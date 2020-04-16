@@ -42,7 +42,8 @@ subcommands = {
 parser.order!
 subcommand = ARGV.shift
 if ARGV.length <= 0
-
+  puts parser.help()
+  return
 end
 
 time = Benchmark.measure {
