@@ -93,5 +93,9 @@ class Subcommand_rename
       end
     end
   end
+
+  def self.options
+    @@options
+  end
 end
 

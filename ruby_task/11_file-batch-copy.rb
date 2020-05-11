@@ -97,4 +97,7 @@ class Subcommand_copy
     end
   end
 
+  def self.options
+    @@options
+  end
 end

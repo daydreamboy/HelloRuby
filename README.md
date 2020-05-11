@@ -4,9 +4,46 @@
 
 ## 1、Ruby语法
 
-### （1）数据类型
+### （1）基本数据类型
 
-Ruby中所有数据都是基于类的，即基本类型（整型、浮点数）也是对象。数据类型，有如下几种[^2]
+#### a. class & module
+
+| 特性         | class                               | module                                |
+| ------------ | ----------------------------------- | ------------------------------------- |
+| 容器功能     | 可以包含实例方法、类方法等          | 仅包含方法和常量                      |
+| 是否能实例化 | 是                                  | 否                                    |
+| 继承性       | 可以继承其他class，但不能继承module | 不能继承                              |
+| mix-ins功能  | class不能被mix in到任意             | 有。可以mix in到其他module或者class中 |
+
+
+
+以上摘自官方文档[^11]，如下
+
+> ### What is the difference between a class and a module?
+>
+> Modules are collections of methods and constants. They cannot generate instances. Classes may generate instances (objects), and have per-instance state (instance variables).
+>
+> Modules may be mixed in to classes and other modules. The mixed in module’s constants and methods blend into that class’s own, augmenting the class’s functionality. Classes, however, cannot be mixed in to anything.
+>
+> A class may inherit from another class, but not from a module.
+>
+> A module may not inherit from anything.
+
+
+
+
+
+
+
+
+
+#### b. class variable & class instance variable
+
+
+
+### （2）literals数据类型
+
+Ruby中所有数据都是基于类的，即基本类型（整型、浮点数）也是对象。literals数据类型，有如下几种[^2]
 
 - Booleans and nil（TrueClass/FalseClass、NilClass）
 - Numbers（Integer、Float、Fixnum）
@@ -571,6 +608,151 @@ puts result
 my_map方法，实际上接收两个参数，一个参数是数组，另一个参数是block
 
 > 示例代码，见block_4_method_normal_parameter_and_block_parameter.rb
+
+
+
+
+
+### （6）module的mix-ins功能[^12]
+
+mix-ins功能，是指通过include或者extend语句，将某个module的方法和常量导入到其他module或者类中。
+
+​       相对于继承方式，mix-ins方式更加灵活，可以将多个module导入到同一个类中。而且Ruby也不支持多继承方式。为了获取父类的工具方法，采用继承方式还是比较耦合严重的。
+
+
+
+#### include语句
+
+举个例子，如下
+
+```ruby
+require 'logger'
+
+module Logging
+  def logger
+    @logger ||= Logger.new(STDOUT)
+  end
+end
+
+class Person
+  include Logging
+
+  def relocate
+    logger.debug "Relocating person..."
+    # or
+    # self.logger.debug "Relocating person..."
+  end
+end
+
+p = Person.new()
+p.relocate()
+```
+
+Person类导入Logging的logger实例方法，相当于自己的实例方法，因此可以使用self或者不使用self来调用实例方法。
+
+说明
+
+> @logger ||= Logger.new(STDOUT)写法，仅创建一次实例变量，不会创建多个
+
+
+
+#### extend语句
+
+extend语句的作用和include类似，但是它导入的方法的接受者可以是类或者实例。如果接受者是类，则它导入的方法是类方法。如果接受者是实例，则它导入的方法是实例方法。
+
+
+
+##### 向类导入类方法
+
+举个例子，如下。因此logger方法里面也必现是类变量，而不是实例变量。
+
+```ruby
+require 'logger'
+
+module Logging
+  def logger
+    @@logger ||= Logger.new(STDOUT)
+  end
+end
+
+class Person
+  extend Logging
+
+  def relocate
+    Person.logger.debug "Relocating1 person..."
+
+    # could also access it with this
+    self.class.logger.debug "Relocating2 person..."
+  end
+end
+
+p = Person.new()
+p.relocate()
+```
+
+
+
+##### 向对象导入实例方法
+
+另外，extend语句也可以运行时针对某个对象使用。举个例子，如下
+
+```ruby
+require 'logger'
+
+module Logging
+  def logger
+    @logger ||= Logger.new(STDOUT)
+  end
+end
+
+class Person; end
+
+p = Person.new
+# p.logger -- this would throw a NoMethodError
+p.extend Logging
+p.logger.debug "just a test"
+```
+
+针对p对象，使用extend语句，添加了实例方法
+
+
+
+#### prepend语句[^13]
+
+prepend语句和include语句类似，但是它继承顺序是在当前类插入方法。
+
+举个例子，如下
+
+```ruby
+module ServiceDebugger
+  def run(args)
+    puts "Service run start: #{args.inspect}"
+    result = super
+    puts "Service run finished: #{result}"
+  end
+end
+
+class Service
+  prepend ServiceDebugger
+
+  # perform some real work
+  def run(args)
+    args.each do |arg|
+      sleep 1
+    end
+    {result: "ok"}
+  end
+end
+
+puts Service.ancestors.inspect()
+
+s = Service.new()
+s.run([1, 2, 3])
+```
+
+继承顺序为`[ServiceDebugger, Service, Object, Kernel, BasicObject]`，因此方法查找，也按照这个顺序，还是影响super指向哪个方法。
+
+
 
 
 
@@ -1324,6 +1506,12 @@ $ source /Users/wesley_chen/.rvm/scripts/rvm
 [^9]:https://stackoverflow.com/questions/29229059/how-to-best-wrap-ruby-optparse-code-and-output
 
 [^10]:https://stackoverflow.com/a/6738955
+
+[^11]:https://www.ruby-lang.org/en/documentation/faq/8/
+[^12]: https://www.sitepoint.com/ruby-mixins-2/
+[^13]:https://medium.com/@leo_hetsch/ruby-modules-include-vs-prepend-vs-extend-f09837a5b073
+
+
 
 
 

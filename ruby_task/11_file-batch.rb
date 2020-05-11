@@ -20,7 +20,7 @@ require_relative './11_file-batch-rename'
 options = {}
 
 subtext = <<HELP
-Commonly used subcommand are:
+Commonly used subcommands are:
    copy   : copy files by batch
    rename : rename files by batch
 See 'opt.rb SUBCOMMAND --help' for more information on a specific subcommand.
@@ -43,14 +43,20 @@ subcommands = {
 
 parser.order!
 subcommand = ARGV.shift
-if ARGV.length <= 0
-
+if ARGV.length <= 0 and subcommand.nil?
+  puts parser.help()
+  return
 end
+
 
 time = Benchmark.measure {
   subcommands[subcommand].create_subcommand.order!
   subcommands[subcommand].execute_subcommand(ARGV)
 }
+
+if subcommands[subcommand].options.empty?
+
+end
 
 puts "Completed with #{time.real} s.".magenta
 
