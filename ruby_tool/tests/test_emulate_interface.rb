@@ -1,4 +1,4 @@
-require_relative '../ruby_tool/AbstractInterface'
+require_relative '../AbstractInterface'
 
 ##
 # Define an interface `BicycleInterface`

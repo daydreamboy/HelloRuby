@@ -662,6 +662,24 @@ Person类导入Logging的logger实例方法，相当于自己的实例方法，�
 
 
 
+##### included方法
+
+module的included方法，可以当module被include时，触发调用。举个例子，如下
+
+```ruby
+module A
+  def A.included(mod)
+    puts "module `#{self}` included in module `#{mod}`"
+  end
+end
+
+module Enumerable
+  include A
+end
+```
+
+> 示例代码，见module_mixin_included.rb
+
 
 
 #### prepend语句[^13]
@@ -699,6 +717,8 @@ s.run([1, 2, 3])
 
 继承顺序为`[ServiceDebugger, Service, Object, Kernel, BasicObject]`，因此方法查找，也按照这个顺序，还是影响super指向哪个方法。
 
+> 示例代码，见module_mixin_prepend.rb
+
 
 
 #### extend语句
@@ -735,6 +755,8 @@ p = Person.new()
 p.relocate()
 ```
 
+> 示例代码，见module_mixin_extend_for_class.rb
+
 
 
 ##### 向对象导入实例方法
@@ -759,6 +781,8 @@ p.logger.debug "just a test"
 ```
 
 针对p对象，使用extend语句，添加了实例方法
+
+> 示例代码，见module_mixin_extend_for_instance.rb
 
 
 
