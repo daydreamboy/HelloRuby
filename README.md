@@ -31,13 +31,59 @@
 
 
 
-
-
-
-
-
-
 #### b. class variable & class instance variable
+
+
+
+#### c. Object
+
+​       Object是用户定义class的基类，即使不显示使用继承，默认基类也是Object。可以通过ancestors方法，查看继承顺序，如下
+
+```ruby
+class Klass
+end
+
+puts Klass.ancestors.inspect # [Klass, Object, Kernel, BasicObject]
+```
+
+
+
+##### send方法
+
+send方法，是一个运行时方法，可以在运行时调用接受者的方法。接受者可以是对象或者类。
+
+签名如下
+
+```ruby
+send(symbol [, args...]) → obj
+send(string [, args...]) → obj
+```
+
+
+
+举个例子，如下
+
+```ruby
+class Klass
+  def hello(*args)
+    puts "Hello " + args.join(' ')
+  end
+
+  def self.Hello(*args)
+    puts "Hello2 " + args.join(' ')
+  end
+end
+
+k = Klass.new
+k.send :hello, "gentle", "readers"   #=> "Hello gentle readers"
+# use send method by runtime, is same as the following line
+k.hello "gentle", "readers"
+Klass.send :Hello, 'gentle2', 'readers2'
+```
+
+> 示例代码，见Object_method_send.rb
+
+
 
 
 
