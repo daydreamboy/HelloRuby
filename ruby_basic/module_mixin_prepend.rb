@@ -18,7 +18,7 @@ class Service
   end
 end
 
-puts Service.ancestors.inspect()
+puts Service.ancestors.inspect
 
 s = Service.new()
 s.run([1, 2, 3])

@@ -19,3 +19,4 @@ end
 p = Person.new()
 p.relocate()
 
+puts Person.ancestors.inspect # [Person, Logging, Object, Kernel, BasicObject]
