@@ -69,11 +69,20 @@ class GitBatch
             :options => {}
         },
         'pull' => {
+            # Note: subcommandline, the rest of command line
             :optParser => nil,
             :action => Proc.new do |subcommandline|
               run_git_command subcommandline
             end
         },
+        'remove_local_other_branch' => {
+            :optParser => nil,
+            :action => Proc.new do |subcommandline|
+              # Note: subcommand without git
+              subcommand = "branch -d `git branch | grep -v \\* | xargs`"
+              run_git_command subcommand
+            end
+        }
     }
 
     self.globalParser = OptionParser.new do |parser|

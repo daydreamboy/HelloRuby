@@ -1430,6 +1430,12 @@ EOF
 
 
 
+### （3）定义Interface类[^14]
+
+
+
+
+
 ## 5、RDoc语法
 
 [RDoc](https://ruby.github.io/rdoc/)是Ruby代码的注释生成文档的工具，包括rdoc和ri两个工具。这个[Cheatsheet](https://devhints.io/rdoc)提供RDoc支持注释形式。
@@ -1586,6 +1592,10 @@ $ source /Users/wesley_chen/.rvm/scripts/rvm
 [^11]:https://www.ruby-lang.org/en/documentation/faq/8/
 [^12]: https://www.sitepoint.com/ruby-mixins-2/
 [^13]:https://medium.com/@leo_hetsch/ruby-modules-include-vs-prepend-vs-extend-f09837a5b073
+
+[^14]:https://metabates.com/2011/02/07/building-interfaces-and-abstract-classes-in-ruby/
+
+
 
 
 
