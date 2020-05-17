@@ -6,6 +6,174 @@
 
 ## 1、Ruby Data Type
 
+### （1）Object Hierarchy
+
+#### a. Inheritance Hierarchy
+
+Ruby是一门OOP语言，所有数据类型都是对象。Ruby提供一些内置对象，如BasicObject、Object、Module、Class、String等。它们的继承关系[^15]，如下
+
+
+
+```mermaid
+classDiagram
+BasicObject <|-- Object
+Object <|-- Module
+Module <|-- Class
+
+Object <|-- String
+Object <|-- Array
+Object <|-- Hash
+Object <|-- Range
+Object <|-- Numeric
+
+Numeric <|-- Integer
+Numeric <|-- Float
+Numeric <|-- Complex
+```
+
+
+
+说明
+
+> 1. 示例代码，见data_type_hierarchy.rb
+> 2. 继承关系，通过superclass方法来检查，而不是使用ancestors方法
+
+
+
+#### b. Instantiation Hierarchy
+
+Instantiation Hierarchy（实例化层次），不同于Inheritance Hierarchy（继承层次）。当定义一个类class（注意：class，不是Class），如下
+
+```ruby
+class Name
+ # some code describing the class behavior
+end
+```
+
+实际上，创建一个Name对象（或者称全局变量），它的类型是Class，但是它不是继承Class，而是Object。通过class方法（Object类提供的），可以检查某个对象的类型是什么。
+
+根据实例化的关系，如下
+
+```mermaid
+classDiagram
+Class <|.. BasicObject
+Class <|.. Object
+Class <|.. Module
+Class <|.. Class
+Class <|.. Array
+Class <|.. Hash
+Class <|.. Range
+Class <|.. Numeric
+Class <|.. Float
+Class <|.. Complex
+Class <|.. Name
+Name <|.. Name0x00007fdadb923368
+```
+
+可以看出大多数类的类型都是Class，而实例化的对象的类型是具体类，例如Name对象（Name:0x00007fdadb923368）的类型是Name。另外，值得注意的是Class的类型是Class，即它本身。
+
+
+
+#### c. Ancestors Hierarchy
+
+Ancestors Hierarchy（祖先层次），主要是ancestors方法（Module提供的方法）提供的顺序。Ruby文档对ancestors方法的说明，如下
+
+> Returns a list of modules included/prepended in *mod* (including *mod* itself).
+
+这里mod应该是module。通过“Instantiation Hierarchy”一节，可以看出所有类(class)的类型都是Class，而Class继承自Module，因此所有class也是可以视为是Module实例化的类对象。通过mix-in方式（include或prepend语句），插入特定module，导致ancestors不一定是继承顺序。
+
+举个例子，如下
+
+```ruby
+def check_ancestors(var)
+  puts "#{var} --> #{var.ancestors.inspect}"
+end
+
+class MyBaseClass
+end
+
+class MyDerivedClass < MyBaseClass
+end
+
+check_ancestors(BasicObject)
+check_ancestors(Object)
+check_ancestors(Module)
+check_ancestors(Class)
+check_ancestors(String)
+check_ancestors(Array)
+check_ancestors(Hash)
+check_ancestors(Range)
+check_ancestors(Numeric)
+check_ancestors(Float)
+check_ancestors(Complex)
+check_ancestors(MyBaseClass)
+check_ancestors(MyDerivedClass)
+```
+
+输入结果如下
+
+```shell
+BasicObject --> [BasicObject]
+Object --> [Object, Kernel, BasicObject]
+Module --> [Module, Object, Kernel, BasicObject]
+Class --> [Class, Module, Object, Kernel, BasicObject]
+String --> [String, Comparable, Object, Kernel, BasicObject]
+Array --> [Array, Enumerable, Object, Kernel, BasicObject]
+Hash --> [Hash, Enumerable, Object, Kernel, BasicObject]
+Range --> [Range, Enumerable, Object, Kernel, BasicObject]
+Numeric --> [Numeric, Comparable, Object, Kernel, BasicObject]
+Float --> [Float, Numeric, Comparable, Object, Kernel, BasicObject]
+Complex --> [Complex, Numeric, Comparable, Object, Kernel, BasicObject]
+MyBaseClass --> [MyBaseClass, Object, Kernel, BasicObject]
+MyDerivedClass --> [MyDerivedClass, MyBaseClass, Object, Kernel, BasicObject]
+```
+
+
+
+#### 总结
+
+Ruby对象层次体系有上面三种层次，导致自定义的类中可以使用到三种不同来源的方法，比如
+
+* 类的类型提供方法
+  * 自定义类的new类方法，实际上是由Class提供的实例方法new，因为自定义类是Class的一个实例
+  * ancestors类方法，实际上由Module提供，Class继承自Module，因此自定义类也可以使用ancestors方法
+* 类的父类提供方法
+  * class类方法，实际上由Object提供，自定义类继承自Object，因此自定义类也可以使用class方法
+
+* mix-in方式导入的Module
+  * puts/p/pp/print等内置方法，实际上由Kernel提供，Kernel是Module的一个实例。Object通过mix-in方式，将Kernel导入到Object自身，因此拥有了Kernel的一些方法
+
+
+
+### （2）Class
+
+通过“Instantiation Hierarchy”一节，可以看出所有类(class)的类型都是Class。Class提供的方法比较少，主要下面几个
+
+```ruby
++ new(super_class=Object) → a_class
++ new(super_class=Object) { |mod| ... } → a_class
+- allocate() → obj
+- inherited(subclass)
+- new(args, ...) → obj
+- superclass → a_super_class or nil
+```
+
+主要介绍下类方法new、实例方法new以及inherited方法
+
+* 类方法，new有两种签名
+
+
+
+
+
+（2）Object
+
+
+
+（3）Module
+
+
+
 ### （1）class & module
 
 | 特性         | class                               | module                                |
@@ -892,6 +1060,14 @@ p.logger.debug "just a test"
 
 
 
+### （2）module的方法
+
+#### instance_method
+
+
+
+
+
 
 
 ## 3、常用Ruby库
@@ -1686,6 +1862,10 @@ $ source /Users/wesley_chen/.rvm/scripts/rvm
 [^13]:https://medium.com/@leo_hetsch/ruby-modules-include-vs-prepend-vs-extend-f09837a5b073
 
 [^14]:https://metabates.com/2011/02/07/building-interfaces-and-abstract-classes-in-ruby/
+
+[^15]:https://www.studytonight.com/ruby/class-in-ruby
+
+
 
 
 
