@@ -1,12 +1,12 @@
-# Ruby Notes
+# Ruby Syntax
 
 [TOC]
 
-## 1、Ruby语法
 
-### （1）基本数据类型
 
-#### a. class & module
+## 1、Ruby Data Type
+
+### （1）class & module
 
 | 特性         | class                               | module                                |
 | ------------ | ----------------------------------- | ------------------------------------- |
@@ -31,11 +31,11 @@
 
 
 
-#### b. class variable & class instance variable
+### （2）class variable & class instance variable
 
 
 
-#### c. Object
+### （3）Object
 
 ​       Object是用户定义class的基类，即使不显示使用继承，默认基类也是Object。可以通过ancestors方法，查看继承顺序，如下
 
@@ -48,7 +48,7 @@ puts Klass.ancestors.inspect # [Klass, Object, Kernel, BasicObject]
 
 
 
-##### send方法
+#### send方法
 
 send方法，是一个运行时方法，可以在运行时调用接受者的方法。接受者可以是对象或者类。
 
@@ -85,9 +85,25 @@ Klass.send :Hello, 'gentle2', 'readers2'
 
 
 
+#### Common Objects
+
+##### File
+
+用于操作文件或目录
 
 
-### （2）literals数据类型
+
+* 重命名文件或文件夹[^10]
+
+```ruby
+File.rename './my-directory', './my-renamed-directory'
+```
+
+
+
+
+
+## 2、Ruby Literals Data Type
 
 Ruby中所有数据都是基于类的，即基本类型（整型、浮点数）也是对象。literals数据类型，有如下几种[^2]
 
@@ -140,11 +156,11 @@ irb中输出，如下
 
 
 
-#### String
+### （1）String
 
 
 
-##### sub方法和gsub方法
+#### sub方法和gsub方法
 
 String提供sub实例方法和gsub实例方法，用字符串替换。
 
@@ -199,7 +215,7 @@ dump_object(gsub_with_string_pattern_literal('pattern is \d+')) # output: "patte
 
 
 
-##### gsub方法的capture group
+#### gsub方法的capture group
 
 gsub方法，支持将满足正则匹配的字符串换成动态的捕获变量值。举个例子，如下
 
@@ -221,13 +237,13 @@ dump_object(regexp_capture_group_anchored('aaa074')) # output: "074"
 
 
 
-#### Regexp
+### （2）Regexp
 
 Regexp类用于表示正则表达式。
 
 
 
-##### 初始化Regexp
+#### 初始化Regexp
 
 Regexp初始化有三种方式
 
@@ -255,7 +271,7 @@ end
 
 
 
-##### match方法
+#### match方法
 
 Regexp实例提供match方法，用于匹配字符串。如果存在匹配，则该方法返回MatchData实例，否则返回nil。
 
@@ -277,23 +293,11 @@ MatchData的string方法返回原始需要匹配的字符串，而to_s方法返�
 
 
 
-#### File
-
-用于操作文件或目录
 
 
+## 3、Ruby Method
 
-##### 重命名文件或文件夹[^10]
-
-```ruby
-File.rename './my-directory', './my-renamed-directory'
-```
-
-
-
-
-
-### （2）Ruby方法
+### （1）特殊方法修饰
 
 #### a. dangerous方法
 
@@ -321,9 +325,7 @@ end
 
 
 
-
-
-### （3）Ruby方法传参方式[^3]
+### （2）方法传参方式[^3]
 
 Ruby方法传参方式，归纳有下面几种
 
@@ -545,7 +547,7 @@ Food的nutrition方法的参数个数修改了，不影响子类Bacon的nutritio
 
 
 
-### （4）Ruby注释方式[^4]
+### （4）代码注释方式[^4]
 
 Ruby的单行注释使用`#`，而多行注释则有下面几种方式
 
@@ -594,7 +596,7 @@ Only at the end of a file, of course.
 
 
 
-### （5）Ruby方法的block参数[^6]
+### （5）方法的block参数[^6]
 
 
 
@@ -657,9 +659,67 @@ my_map方法，实际上接收两个参数，一个参数是数组，另一个�
 
 
 
+### （6）常用Ruby Method
+
+#### a. system
+
+格式：**system([env,] command... [,options]) → true, false or nil**
+
+作用：产生一个子shell，执行command
+
+说明：
+
+返回nil，表示命令执行出错。
+
+返回true，表示命令执行返回状态为0。
+
+返回false，表示命令执行返回状态为非0。
+
+官方描述，如下
+
+> system returns `true` if the command gives zero exit status, `false` for non zero exit status. Returns `nil` if command execution fails. An error status is available in `$?`.
 
 
-### （6）module的mix-ins功能[^12]
+
+除了使用system方法，还有下面的几种方式获取shell command输出结果[^7]
+
+但是下面几种方式，执行命令，但是都不能完全得到命令的正常输出以及错误输出。
+
+```ruby
+exec("echo 'hello world'") # exits from ruby, then runs the command
+system('echo', 'hello world') # returns the status code
+sh('echo', 'hello world') # returns the status code
+`echo "hello world"` # returns stdout
+%x[echo 'hello world'] # returns stdout
+```
+
+
+
+可以使用`Open3.capture3`方法，获取三个返回值。举个例子，如下
+
+```ruby
+require 'open3'
+stdout, stderr, status = Open3.capture3("ls")
+if status.success?
+  # success
+else
+  # failure
+end
+```
+
+说明
+
+> `Open3`库是Ruby内置库，可以直接使用。示例代码，见07_git-batch.rb
+
+
+
+
+
+## 4、Ruby Module
+
+
+
+### （1）module的mix-ins功能[^12]
 
 mix-ins功能，是指通过include或者prepend语句，将某个module的方法和常量导入到其他module或者类中。
 
@@ -673,7 +733,7 @@ mix-ins功能，是指通过include或者prepend语句，将某个module的方�
 
 
 
-#### include语句
+#### a. include语句
 
 举个例子，如下
 
@@ -728,7 +788,7 @@ end
 
 
 
-#### prepend语句[^13]
+#### b. prepend语句[^13]
 
 prepend语句和include语句类似，但是它继承顺序是在当前类插入方法。
 
@@ -767,7 +827,7 @@ s.run([1, 2, 3])
 
 
 
-#### extend语句
+#### c. extend语句
 
 extend语句的作用和include类似，但是它不影响ancestor顺序，而且它导入的方法的接受者可以是类或者实例。如果接受者是类，则它导入的方法是类方法。如果接受者是实例，则它导入的方法是实例方法。
 
@@ -831,64 +891,6 @@ p.logger.debug "just a test"
 > 示例代码，见module_mixin_extend_for_instance.rb
 
 
-
-## 2、常用Ruby函数
-
-
-
-### （1）shell command调用
-
-#### system
-
-格式：**system([env,] command... [,options]) → true, false or nil**
-
-作用：产生一个子shell，执行command
-
-说明：
-
-返回nil，表示命令执行出错。
-
-返回true，表示命令执行返回状态为0。
-
-返回false，表示命令执行返回状态为非0。
-
-官方描述，如下
-
-> system returns `true` if the command gives zero exit status, `false` for non zero exit status. Returns `nil` if command execution fails. An error status is available in `$?`.
-
-
-
-### （2）获取shell command输出结果[^7]
-
-
-
-一般有下面几种方式，执行命令，但是都不能完全得到命令的正常输出以及错误输出。
-
-```ruby
-exec("echo 'hello world'") # exits from ruby, then runs the command
-system('echo', 'hello world') # returns the status code
-sh('echo', 'hello world') # returns the status code
-`echo "hello world"` # returns stdout
-%x[echo 'hello world'] # returns stdout
-```
-
-
-
-可以使用`Open3.capture3`方法，获取三个返回值。举个例子，如下
-
-```ruby
-require 'open3'
-stdout, stderr, status = Open3.capture3("ls")
-if status.success?
-  # success
-else
-  # failure
-end
-```
-
-
-
-> `Open3`库是Ruby内置库，可以直接使用。示例代码，见07_git-batch.rb
 
 
 
@@ -1430,7 +1432,97 @@ EOF
 
 
 
-### （3）定义Interface类[^14]
+### （3）定义Interface类和Abstract类[^14]
+
+​       Java里面可以定义Interface和Abstract类，它们区别在于Interface不能有方法实现，而Abstract里面可以有默认方法实现。对于子类，子类可以实现Interface或者继承Abstract。
+
+​       Ruby是一门解释性语言，没有编译过程，不能在编译期间来确定哪些方法需要实现，因此没有提供Interface类和Abstract类的语言特性。
+
+​       不过，可以通过运行时、mixin等方式，自己构造一个Abstract类，达到要求子类实现某个方法，否则在运行期间，会给出错误提示。
+
+下面Java的Abstract类为例子
+
+```java
+abstract class Bicycle {
+  abstract public void changeGear(int newValue);
+  abstract public void speedUp(int increment);
+  public void applyBrakes(int decrement) {
+    // do some work here
+  }
+}
+
+public class ACMEBicycle extends Bicycle {
+   public void applyBrakes(int decrement) {
+     // do some work here
+   }
+}
+```
+
+如果换成Ruby的Abstract类，如下
+
+```ruby
+module AbstractInterface
+  class InterfaceNotImplementedError < NoMethodError
+  end
+
+  def self.included(clz)
+    clz.send(:include, AbstractInterface::Methods)
+    clz.send(:extend, AbstractInterface::Methods)
+  end
+
+  module Methods
+    def api_not_implemented(clz)
+      caller.first.match(/in \`(.+)\'/)
+      method_name = $1
+      raise AbstractInterface::InterfaceNotImplementedError.new("#{clz.class.name} needs to implement '#{method_name}' for interface #{self.name}!")
+    end
+  end
+end
+
+class Bicycle
+  include AbstractInterface
+
+  # Some documentation on the change_gear method
+  def change_gear(new_value)
+    Bicycle.api_not_implemented(self)
+  end
+
+  # Some documentation on the speed_up method
+  def speed_up(increment)
+    Bicycle.api_not_implemented(self)
+  end
+
+  # Some documentation on the apply_brakes method
+  def apply_brakes(decrement)
+    # do some work here
+  end
+
+end
+```
+
+这里定义了一个通用的Abstract module，用向Bicycle抽象类提供api_not_implemented类方法。
+
+说明
+
+> Bicycle有api_not_implemented类方法，是通过mix-in方式（include语句）获得的
+
+实际上，Bicycle是抽象类，而AbstractInterface是帮助Bicycle变成抽象类的工具类
+
+如果Bicycle抽象类，也是继承方式，如下
+
+```ruby
+class AcmeBicycle < Bicycle
+end
+
+bike = AcmeBicycle.new
+bike.change_gear(1) # AbstractInterface::InterfaceNotImplementedError: AcmeBicycle needs to implement 'change_gear' for interface Bicycle!
+```
+
+
+
+#### 对AbstractInterface优化
+
+Bicycle抽象类定义每个抽象方法，需要调用api_not_implemented方法，代码比较冗余。
 
 
 
