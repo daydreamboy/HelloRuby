@@ -158,60 +158,75 @@ Ruby对象层次体系有上面三种层次，导致自定义的类中可以使�
 - superclass → a_super_class or nil
 ```
 
-主要介绍下类方法new、实例方法new以及inherited方法
-
-* 类方法，new有两种签名
+主要介绍下类方法new、实例方法new以及inherited实例方法
 
 
 
+* 类方法new，有两种签名
+
+使用Class的new类方法，可以创建一个运行时类对象。举个例子，如下
+
+```ruby
+fred = Class.new do
+  def meth1
+    "hello"
+  end
+  def meth2
+    "bye"
+  end
+end
+
+a = fred.new
+puts fred.superclass #=> Object
+puts a.inspect   #=> #<#<Class:0x100381890>:0x100376b98>
+puts a.meth1     #=> "hello"
+puts a.meth2     #=> "bye"
+```
+
+fred是一个类对象，值得注意的是，上面运行时创建类，和下面代码定义fred是一样的。
+
+```ruby
+class fred
+  def meth1
+    "hello"
+  end
+  def meth2
+    "bye"
+  end
+end
+```
 
 
-（2）Object
 
+* inherited实例方法
 
+```ruby
+class Foo
+  def self.inherited(subclass)
+    puts "New subclass: #{subclass}"
+  end
+end
 
-（3）Module
+class Bar < Foo
+end
 
+class Baz < Bar
+end
+```
 
-
-### （1）class & module
-
-| 特性         | class                               | module                                |
-| ------------ | ----------------------------------- | ------------------------------------- |
-| 容器功能     | 可以包含实例方法、类方法等          | 仅包含方法和常量                      |
-| 是否能实例化 | 是                                  | 否                                    |
-| 继承性       | 可以继承其他class，但不能继承module | 不能继承                              |
-| mix-ins功能  | class不能被mix in到任意             | 有。可以mix in到其他module或者class中 |
-
-
-
-以上摘自官方文档[^11]，如下
-
-> ### What is the difference between a class and a module?
->
-> Modules are collections of methods and constants. They cannot generate instances. Classes may generate instances (objects), and have per-instance state (instance variables).
->
-> Modules may be mixed in to classes and other modules. The mixed in module’s constants and methods blend into that class’s own, augmenting the class’s functionality. Classes, however, cannot be mixed in to anything.
->
-> A class may inherit from another class, but not from a module.
->
-> A module may not inherit from anything.
-
-
-
-### （2）class variable & class instance variable
+inherited实例方法是一个私有方法，当发生类继承时，会触发该方法。
 
 
 
 ### （3）Object
 
-​       Object是用户定义class的基类，即使不显示使用继承，默认基类也是Object。可以通过ancestors方法，查看继承顺序，如下
+​       Object是用户定义class的基类，即使不显示使用继承，默认基类也是Object。可以通过superclass方法，查看它的父类，如下
 
 ```ruby
 class Klass
 end
 
-puts Klass.ancestors.inspect # [Klass, Object, Kernel, BasicObject]
+puts Klass.superclass
 ```
 
 
@@ -253,9 +268,48 @@ Klass.send :Hello, 'gentle2', 'readers2'
 
 
 
-#### Common Objects
 
-##### File
+
+### （4）Module
+
+
+
+
+
+### （5）class & module
+
+| 特性         | class对象                           | module对象                            |
+| ------------ | ----------------------------------- | ------------------------------------- |
+| 容器功能     | 可以包含实例方法、类方法等          | 仅包含方法和常量                      |
+| 是否能实例化 | 是                                  | 否                                    |
+| 继承性       | 可以继承其他class，但不能继承module | 不能继承                              |
+| mix-ins功能  | class不能被mix in到任意             | 有。可以mix in到其他module或者class中 |
+
+
+
+以上摘自官方文档[^11]，如下
+
+> ### What is the difference between a class and a module?
+>
+> Modules are collections of methods and constants. They cannot generate instances. Classes may generate instances (objects), and have per-instance state (instance variables).
+>
+> Modules may be mixed in to classes and other modules. The mixed in module’s constants and methods blend into that class’s own, augmenting the class’s functionality. Classes, however, cannot be mixed in to anything.
+>
+> A class may inherit from another class, but not from a module.
+>
+> A module may not inherit from anything.
+
+
+
+### （6）class variable & class instance variable
+
+
+
+
+
+### （7）Common Objects
+
+### File
 
 用于操作文件或目录
 
