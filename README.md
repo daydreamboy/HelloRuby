@@ -283,7 +283,7 @@ class_eval(string [, filename [, lineno]]) → obj click to toggle source
 class_eval {|mod| block } → obj
 ```
 
-举个例子，如下
+举个例子[^16]，如下
 
 ```ruby
 class Person
@@ -2062,6 +2062,8 @@ $ source /Users/wesley_chen/.rvm/scripts/rvm
 [^14]:https://metabates.com/2011/02/07/building-interfaces-and-abstract-classes-in-ruby/
 
 [^15]:https://www.studytonight.com/ruby/class-in-ruby
+
+[^16]:https://www.jimmycuadra.com/posts/metaprogramming-ruby-class-eval-and-instance-eval/
 
 
 
