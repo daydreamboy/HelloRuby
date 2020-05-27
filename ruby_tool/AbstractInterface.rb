@@ -12,10 +12,10 @@ module AbstractInterface
   end
 
   module Methods
-    def api_not_implemented(clz)
+    def api_not_implemented(instance)
       caller.first.match(/in \`(.+)\'/)
       method_name = $1
-      raise AbstractInterface::InterfaceNotImplementedError.new("#{clz.class.name} needs to implement '#{method_name}' for interface #{self.name}!")
+      raise AbstractInterface::InterfaceNotImplementedError.new("#{instance.class.name} needs to implement '#{method_name}' for interface #{self.name}!")
     end
   end
 end

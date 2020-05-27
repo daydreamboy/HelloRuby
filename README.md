@@ -272,7 +272,93 @@ Klass.send :Hello, 'gentle2', 'readers2'
 
 ### （4）Module
 
+#### class_eval方法
 
+class_eval方法，是一个运行时方法，可以向类添加方法（注意：class是继承自module）。
+
+class_eval方法，签名如下
+
+```ruby
+class_eval(string [, filename [, lineno]]) → obj click to toggle source
+class_eval {|mod| block } → obj
+```
+
+举个例子，如下
+
+```ruby
+class Person
+end
+
+Person.class_eval do
+  def say_hello
+    "Hello!"
+  end
+
+  def self.say_hello2
+    "Hello2!"
+  end
+end
+
+Person.class_eval('def say_hello3() "Hello3" end')
+
+jimmy = Person.new
+puts jimmy.say_hello # "Hello!"
+puts Person.say_hello2 # "Hello2!"
+puts jimmy.say_hello3 # "Hello3!"
+```
+
+> 示例代码，见Module_method_class_eval.rb
+
+
+
+#### instance_method方法
+
+instance_method方法，用于构造一个未绑定的方法对象，再通过bind方法来绑定self所指向的对象。
+
+instance_method方法签名，如下
+
+```ruby
+instance_method(symbol) → unbound_method
+```
+
+举个例子，如下
+
+```ruby
+class Interpreter
+  def do_a() print 'there, ' end
+  def do_d() print 'Hello ' end
+  def do_e() print "!\n" end
+  def do_v() print 'Dave' end
+
+  Dispatcher = {
+      'a' => instance_method(:do_a),
+      'd' => instance_method(:do_d),
+      'e' => instance_method(:do_e),
+      'v' => instance_method(:do_v),
+  }
+
+  def interpret(string)
+    string.each_char do |b|
+      Dispatcher[b].bind(self).call
+    end
+  end
+
+end
+
+i = Interpreter.new
+i.interpret('dave')
+print Class.ancestors.inspect
+```
+
+> 示例代码，见Module_method_instance_method.rb
+
+
+
+通过bind方法来绑定self所指向的对象，再调用call方法，来调用instance_method方法创建的方法对象。
+
+注意
+
+> Ruby方法定义，如果单行写，方法名必须要一对括号
 
 
 
@@ -1114,10 +1200,6 @@ p.logger.debug "just a test"
 
 
 
-### （2）module的方法
-
-#### instance_method
-
 
 
 
@@ -1670,7 +1752,7 @@ EOF
 
 ​       不过，可以通过运行时、mixin等方式，自己构造一个Abstract类，达到要求子类实现某个方法，否则在运行期间，会给出错误提示。
 
-下面Java的Abstract类为例子
+下面以Java的Abstract类为例子
 
 ```java
 abstract class Bicycle {
@@ -1738,7 +1820,7 @@ end
 
 实际上，Bicycle是抽象类，而AbstractInterface是帮助Bicycle变成抽象类的工具类
 
-如果Bicycle抽象类，也是继承方式，如下
+如果Bicycle是抽象类，使用它也是继承方式，如下
 
 ```ruby
 class AcmeBicycle < Bicycle
@@ -1753,6 +1835,68 @@ bike.change_gear(1) # AbstractInterface::InterfaceNotImplementedError: AcmeBicyc
 #### 对AbstractInterface优化
 
 Bicycle抽象类定义每个抽象方法，需要调用api_not_implemented方法，代码比较冗余。
+
+可以在AbstractInterface中统一提供一个便利方法，把抽象方法的名字作为参数，这样不用定义抽象方法，也不用在抽象方法里面调用api_not_implemented方法。
+
+```ruby
+module AbstractInterface
+  class InterfaceNotImplementedError < NoMethodError
+  end
+
+  def self.included(clz)
+    clz.send(:include, AbstractInterface::Methods)
+    clz.send(:extend, AbstractInterface::Methods)
+    clz.send(:extend, AbstractInterface::ClassMethods)
+  end
+
+  module Methods
+    def api_not_implemented(instance, method_name = nil)
+      if method_name.nil?
+        caller.first.match(/in \`(.+)\'/)
+        method_name = $1
+      end
+      raise AbstractInterface::InterfaceNotImplementedError.new("#{instance.class.name} needs to implement '#{method_name}' for interface #{self.name}!")
+    end
+  end
+
+  module ClassMethods
+    def needs_implementation(clz, name, *args)
+      self.class_eval do
+        define_method(name) do |*args|
+          clz.api_not_implemented(self, name)
+        end
+      end
+    end
+  end
+end
+```
+
+使用上面AbstractInterface module比较简单，调用它导入的needs_implementation方法即可。
+
+```ruby
+require_relative '../AbstractInterface2'
+
+class Bicycle
+  include AbstractInterface
+
+  needs_implementation self, :change_gear, :new_value
+  needs_implementation self, :speed_up, :increment
+
+  # Some documentation on the apply_brakes method
+  def apply_brakes(decrement)
+    # do some work here
+  end
+
+end
+
+class AcmeBicycle < Bicycle
+end
+
+bike = AcmeBicycle.new
+bike.change_gear(1) # AbstractInterface::InterfaceNotImplementedError: AcmeBicycle needs to implement 'change_gear' for interface Bicycle!
+```
+
+> 示例代码，见test_emulate_interface_by_AbstractInterface2.rb
 
 
 
