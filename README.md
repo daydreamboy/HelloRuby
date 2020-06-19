@@ -1270,7 +1270,7 @@ Only at the end of a file, of course.
 
 
 
-## 12、常用基础Class和Module
+## 12、常用基础Class
 
 ### （1）File
 
@@ -1286,11 +1286,32 @@ File.rename './my-directory', './my-renamed-directory'
 
 
 
+## 13、常用基础Module
+
+### （1）Kernel
+
+#### a. \_\_method\_\_
+
+`__method__`方法返回当前方法的名字[^17]，类型是Symbol。如果调用该方法，不在方法中，则返回nil
+
+举个例子，如下
+
+```ruby
+require_relative '../ruby_tool/dump_tool'
+
+def test___method__
+  __method__
+end
+
+dump_object(test___method__) # :test___method__
+dump_object(__method__) # nil
+```
+
+> 示例代码，见Kernel\_\__method\_\_.rb
 
 
 
-
-## 13、常用Ruby库
+## 14、常用Ruby库
 
 ### （1）json库
 
@@ -1736,7 +1757,7 @@ missing argument: -r
 
 
 
-## 14、常用Ruby Tips
+## 15、常用Ruby Tips
 
 ### （1）Shell和Ruby脚本通信
 
@@ -1988,7 +2009,7 @@ bike.change_gear(1) # AbstractInterface::InterfaceNotImplementedError: AcmeBicyc
 
 
 
-## 15、RDoc语法
+## 16、RDoc语法
 
 [RDoc](https://ruby.github.io/rdoc/)是Ruby代码的注释生成文档的工具，包括rdoc和ri两个工具。这个[Cheatsheet](https://devhints.io/rdoc)提供RDoc支持注释形式。
 
@@ -2037,7 +2058,7 @@ YARD支持的[tag列表](https://www.rubydoc.info/gems/yard/file/docs/Tags.md#Ta
 
 
 
-## 16、gem命令使用
+## 17、gem命令使用
 
 ### （1）常用命令
 
@@ -2068,7 +2089,7 @@ https://gems.ruby-china.com/
 
 
 
-## 17、使用RVM（Ruby Version Manager）
+## 18、使用RVM（Ruby Version Manager）
 
 ### （1）安装RVM
 
@@ -2140,6 +2161,8 @@ $ source /Users/wesley_chen/.rvm/scripts/rvm
 [^15]:https://www.studytonight.com/ruby/class-in-ruby
 
 [^16]:https://www.jimmycuadra.com/posts/metaprogramming-ruby-class-eval-and-instance-eval/
+
+[^17]:https://stackoverflow.com/questions/199527/get-the-name-of-the-currently-executing-method
 
 
 
