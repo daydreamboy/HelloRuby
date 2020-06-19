@@ -2,9 +2,648 @@
 
 [TOC]
 
+## 前言
+
+根据Ruby官方文档[Ruby Syntax](https://ruby-doc.org/core-2.7.1/doc/syntax_rdoc.html)这一节的分类，对应本文的前11个章节。
+
+* Literals 
+
+介绍Ruby的相关字面常量，例如Number、String、Array、Hash等
 
 
-## 1、Ruby Data Type
+
+* Assignment 
+
+介绍Ruby的赋值以及变量定义的语法
+
+
+
+* Control Expressions 
+
+介绍Ruby的控制语句，例如`if`, `unless`, `while`, `until`, `for`, `break`, `next`, `redo`等
+
+
+
+* Methods 
+
+介绍Ruby的方法以及方法参数
+
+
+
+* Calling Methods 
+
+介绍如何调用Ruby的方法
+
+
+
+* Modules and Classes 
+
+介绍Ruby的Module和Class
+
+
+
+* Exceptions 
+
+介绍Ruby的异常处理
+
+
+
+* Precedence 
+
+介绍Ruby的操作符优先级
+
+
+
+* Refinements 
+
+介绍Ruby的实验性特性
+
+
+
+* Miscellaneous 
+
+介绍Ruby相关杂项，例如`alias`, `undef`, `BEGIN`, `END`等
+
+
+
+* Comments 
+
+介绍Ruby的行注释、块注释
+
+
+
+## 1、Literals
+
+Ruby中所有数据都是基于类的，即基本类型（整型、浮点数）也是对象。literals数据类型，有如下几种[^2]
+
+- Booleans and nil（TrueClass/FalseClass、NilClass）
+- Numbers（Integer、Float、Fixnum）
+- Strings（String）
+- Symbols（Symbol）
+- Arrays（Array）
+- Hashes（Hash）
+- Ranges（Range）
+- Regular Expressions（Regexp）
+- Procs（Proc）
+
+
+
+irb中输出，如下
+
+```ruby
+2.4.0 :001 > true.class
+ => TrueClass 
+2.4.0 :002 > false.class
+ => FalseClass 
+2.4.0 :003 > nil.class
+ => NilClass 
+2.4.0 :004 > "Ruby".class
+ => String 
+2.4.0 :005 > 1.class
+ => Integer 
+2.4.0 :006 > 4.5.class
+ => Float 
+2.4.0 :007 > 3_463_456_457.class
+ => Integer 
+2.4.0 :008 > :age.class
+ => Symbol 
+2.4.0 :009 > [1, 2, 3].class
+ => Array 
+2.4.0 :010 > h = {:name => "Jane", :age => 17}
+ => {:name=>"Jane", :age=>17} 
+2.4.0 :011 > h.class
+ => Hash 
+2.4.0 :012 > (1..2).class
+ => Range 
+2.4.0 :013 > /.*/.class
+ => Regexp 
+2.4.0 :014 > -> { 1 + 1 }.class
+ => Proc 
+```
+
+> 示例代码见data_type.rb
+
+
+
+### （1）String
+
+#### sub方法和gsub方法
+
+String提供sub实例方法和gsub实例方法，用字符串替换。
+
+* sub实例方法，只替换满足匹配的首个字符串
+* gsub（global sub）实例方法，全局替换满足匹配的所有字符串
+
+> sub和gsub方法，对应有修改入参字符串的版本：sub!和gsub!方法
+
+
+
+以gsub方法为例，其方法签名，如下
+
+```ruby
+gsub(pattern, replacement) → new_str
+gsub(pattern, hash) → new_str
+gsub(pattern) {|match| block } → new_str
+gsub(pattern) → enumerator
+```
+
+pattern参数，可以是字符串或者Regexp对象。
+
+举个例子，如下
+
+```ruby
+def gsub_with_string_pattern(string)
+  string.gsub('potato', 'banana')
+end
+
+def gsub_with_Regexp_pattern(string)
+  string.gsub(/p[a-zA-Z]+o/, 'banana')
+end
+
+def gsub_with_Regexp_pattern_anchored(string)
+  string.gsub(/^p[a-zA-Z]+o$/, 'banana')
+end
+
+dump_object(gsub_with_string_pattern("One potato, two potato, three potato, four."))
+dump_object(gsub_with_Regexp_pattern("One potato, two potato, three potato, four."))
+dump_object(gsub_with_Regexp_pattern_anchored("One potato, two potato, three potato, four."))
+```
+
+注意，pattern参数是字符串，即使字符串是正则表达式，不会按照正则匹配。举个例子，如下
+
+```ruby
+def gsub_with_string_pattern_literal(string)
+  string.gsub('\d+', "[number]")
+end
+
+dump_object(gsub_with_string_pattern_literal("ff001.png"))
+dump_object(gsub_with_string_pattern_literal('pattern is \d+')) # output: "pattern is [number]"
+```
+
+
+
+#### gsub方法的capture group
+
+gsub方法，支持将满足正则匹配的字符串换成动态的捕获变量值。举个例子，如下
+
+```ruby
+def regexp_capture_group(string)
+  string.gsub(/(\d+)/, '\1')
+end
+
+def regexp_capture_group_anchored(string)
+  string.gsub(/[a-zA-Z]*(\d+)/, '\1')
+end
+
+dump_object(regexp_capture_group('aaa074')) # output: "aaa074"
+dump_object(regexp_capture_group_anchored('aaa074')) # output: "074"
+```
+
+* aaa074按照`/(\d+)/`匹配，满足匹配的是074换成捕获变量值074，所以最终替换后的字符串是aaa074
+* aaa074按照`/[a-zA-Z]*(\d+)/`匹配，满足匹配的是aaa074换成捕获变量值074，所以最终替换后的字符串是074
+
+
+
+### （2）Regexp
+
+Regexp类用于表示正则表达式。
+
+
+
+#### 初始化Regexp
+
+Regexp初始化有三种方式
+
+* /xxx/方式
+* %r{xxx}方式
+* 使用new方法的方式
+
+举个例子，如下
+
+```ruby
+def create_with_forward_slashes
+  return /hay/
+end
+
+def create_with_r_percent_literal
+  return %r{hay}
+end
+
+def create_with_new
+  return Regexp.new('hay')
+end
+```
+
+> 示例方法，见data_type_Regexp_create.rb
+
+
+
+#### match方法
+
+Regexp实例提供match方法，用于匹配字符串。如果存在匹配，则该方法返回MatchData实例，否则返回nil。
+
+举个例子，如下
+
+```ruby
+def create_with_forward_slashes
+  return /hay/
+end
+
+match_data = create_with_forward_slashes.match('haystack')
+
+dump_object(match_data)
+dump_object("original string: #{match_data.string}")
+dump_object("matched string: #{match_data.to_s}")
+```
+
+MatchData的string方法返回原始需要匹配的字符串，而to_s方法返回满足匹配的字符串。
+
+
+
+
+
+## 2、Assignment
+
+
+
+## 3、Control Expressions
+
+
+
+## 4、Methods
+
+### （1）特殊方法修饰
+
+#### a. dangerous方法
+
+```ruby
+class String
+  def dangerous_method!
+    self.upcase!; # Note: change self itself
+  end
+end
+
+def test_dangerous_method
+  foo = 'this is a string'
+  foo.dangerous_method! # Note: change foo itself
+  puts foo
+end
+```
+
+​      Ruby约定，方法名以`!`结尾，表示这个方法会修改对象本身或者对象内部状态，称为dangerous方法。例如String的`upcase!`方法。
+
+
+
+#### b. 返回值类型为bool的方法
+
+​       Ruby约定，方法名以`?`结尾，表示这个方法的返回值类型是bool，例如Object提供的`is_a?`函数和`kind_of?`函数。
+
+
+
+
+
+## 5、Calling Methods
+
+### （1）方法的传参方式[^3]
+
+Ruby方法传参方式，归纳有下面几种
+
+- 正常传参方式，参数有序性
+- 可选参数，参数有序性
+- keyword参数，参数无序性
+- 可变参数列表
+
+> 示例代码，见
+>
+> method_argument_1_normal.rb
+>
+> method_argument_2_optional.rb
+>
+> method_argument_3_keyword.rb
+>
+> method_argument_4_variable_list_as_array.rb
+>
+> method_argument_5_variable_list_as_hash.rb
+
+
+
+#### a. 正常传参方式
+
+正常传参方式：实参和形参是一一对应的，而且实参要保证顺序。
+
+
+
+举个例子，如下
+
+```ruby
+def write(file, data, mode)
+  ...
+end
+```
+
+write方法有三个参数，必须按照顺序传入3个实参。
+
+
+
+#### b. 可选参数
+
+可选参数：参数有默认值，该形参对应的实参可以不传，使用默认值。
+
+
+
+注意：
+
+> 1. 两个及以上可选参数总是位于正常参数之后，而且可选参数可以有多个。否则，脚本执行报错。
+>
+> 举个错误的例子，如下
+>
+> ```ruby
+> def write3(file, data, mode = "w", size, name = "default")
+> end
+> 
+> $ syntax error, unexpected '=', expecting ')'
+> data, mode = "w", size, name = "default")
+>                            ^
+> $ syntax error, unexpected ')', expecting end-of-input
+> = "w", size, name = "default")
+>                            ^
+> ```
+>
+> 正确形式是
+>
+> ```ruby
+> def write3_fixed(file, data, size, mode = "w", name = "default")
+> end
+> ```
+>
+> 2. 一个可选参数，允许在正常参数之前。举个例子，如下
+>
+> ```ruby
+> def write2(file = 'default', data, mode, size)
+>   ...
+> end
+> 
+> ```
+>
+> 调用根据参数个数，自动匹配对应参数，如下
+>
+> write2(`data` "cats are cool!", `mode` "w", `size` 10)
+> write2(`file` "cats.txt", `data` "cats are cool!", `mode` "r", `size` 10)
+
+
+
+
+
+#### c. keyword参数
+
+keyword参数，指形参后面跟一个冒号，表示实参必须以键值对的形式传入。
+
+keyword参数的好处是实参可以不用保序，而且调用有key做描述，不用转到方法签名处，更加清楚。
+
+
+
+举个例子
+
+```ruby
+# Note: the last is optional keyword argument
+def write(file:, data:, mode: "rw")
+  ...
+end
+
+# Note: keyword argument mixed with normal argument
+def write2(file, data:, mode: "rw")
+  ...
+end
+
+write(data: 123, file: "test.txt")
+write2("test.txt", data: 123, mode: 'r')
+```
+
+注意：
+
+> keyword参数，要求实参必须以键值对的形式传入，否则脚本执行出错
+
+
+
+#### d. 可变参数列表
+
+可变参数列表分为两种：传入多个正常参数，和传入多个keyword参数
+
+
+
+##### 1. 传入多个正常参数，可用splat operator(`*`)来接收
+
+举个例子
+
+```ruby
+def print_all(*args)
+  # Note: args is an array, but *args is a placeholder which expanded as literal elements
+  dump_object(args)
+
+  # Note: expand *args as 1, 2, 3, 4, 5
+  method_with_5_args(*args)
+end
+
+print_all(1, 2, 3, 4, 5)
+```
+
+在print_all函数中args变成一个数组对象，如果再对它使用splat operator(`*`)，则展开为字面数组。例如`method_with_5_args(*args)`，*arg展开为5个参数传给method_with_5_args函数
+
+
+
+##### 2. 传入多个keyword参数，可用double splat operator(`**`)来接收
+
+举个例子
+
+```ruby
+def print_all(**args)
+  # Note: args is a hash
+  dump_object(args)
+
+  # Note: expand *args as [:x, 1], [:y, 2]
+  method_with_2_arguments *args
+
+  # Note: **args also a hash
+  dump_object(**args)
+end
+
+print_all(x: 1, y: 2)
+```
+
+在print_all函数中args变成一个Hash对象，而*args将Hash对象转成数组，**args还是本身的Hash对象
+
+
+
+#### e. 混合多种传参方式
+
+根据上面几种传参方式，可以混合使用，因此存在优先级：required -> optional -> variable -> keyword
+
+```ruby
+# Note: required -> optional -> variable -> keyword
+def testing(a, b = 1, *c, d: 1, **x)
+  # p a,b,c,d,x
+  dump_object(a)
+  dump_object(b)
+  dump_object(c)
+  dump_object(d)
+  dump_object(x)
+end
+
+testing('a', 'b', 'c', 'd', 'e', d: 2, x: 1)
+```
+
+`**x`和d: 1都属于keyword参数，`*c`属于variable参数
+
+> 示例代码，见method_argument_6_mixed.rb
+
+
+
+#### d. 接收所有参数
+
+Ruby方法传参可以使用通配符`*`，接收所有参数。此方式不常见，但配合super方法可以将参数透传给父类方法。
+
+举个例子，如下
+
+```ruby
+class Food
+  def nutrition(vitamins, minerals)
+    puts vitamins
+    puts minerals
+  end
+end
+
+class Bacon < Food
+  def nutrition(*)
+    super
+  end
+end
+
+bacon = Bacon.new
+bacon.nutrition("B6", "Iron")
+```
+
+Food的nutrition方法的参数个数修改了，不影响子类Bacon的nutrition方法。
+
+
+
+### （2）方法的block参数[^6]
+
+#### a. 传block参数
+
+Ruby方法可以使用block传参，需要使用`yield`以及`block_given?`来调用和检查block。
+
+* `yield`，在ruby方法中使用`yield`调用block，可以将block需要的参数，传给`yield`
+* `block_given?`，用于检查方法的参数中是否block传入。如果不检查，传入非block参数，用`yield`调用会出现异常
+
+举个例子，如下
+
+```ruby
+def my_method
+  puts "reached the top"
+  # Note: call the block parameter by using `yield`
+  status = yield("John", 2) if block_given?
+  puts "reached the bottom"
+  puts "status code: #{status}"
+end
+
+my_method do |name, age|
+  puts "Hello, #{name} in #{age} years old"
+  puts "reached yield"
+  1
+end
+```
+
+
+
+#### b. 同时传正常参数和block参数
+
+Ruby方法允许同时传正常参数和block参数，但是block参数有且仅有一个[^6]，而且总是在最后一个。
+
+举个例子，如下
+
+```ruby
+def my_map(array)
+  new_array = []
+
+  for element in array
+    new_array.push yield element if block_given?
+  end
+
+  new_array
+end
+
+result = my_map([1, 2, 3]) do |number|
+  number * 2
+end
+
+puts result
+```
+
+my_map方法，实际上接收两个参数，一个参数是数组，另一个参数是block
+
+> 示例代码，见block_4_method_normal_parameter_and_block_parameter.rb
+
+
+
+### （3）常用Ruby方法
+
+#### a. system
+
+格式：**system([env,] command... [,options]) → true, false or nil**
+
+作用：产生一个子shell，执行command
+
+说明：
+
+返回nil，表示命令执行出错。
+
+返回true，表示命令执行返回状态为0。
+
+返回false，表示命令执行返回状态为非0。
+
+官方描述，如下
+
+> system returns `true` if the command gives zero exit status, `false` for non zero exit status. Returns `nil` if command execution fails. An error status is available in `$?`.
+
+
+
+除了使用system方法，还有下面的几种方式获取shell command输出结果[^7]
+
+但是下面几种方式，执行命令，但是都不能完全得到命令的正常输出以及错误输出。
+
+```ruby
+exec("echo 'hello world'") # exits from ruby, then runs the command
+system('echo', 'hello world') # returns the status code
+sh('echo', 'hello world') # returns the status code
+`echo "hello world"` # returns stdout
+%x[echo 'hello world'] # returns stdout
+```
+
+
+
+可以使用`Open3.capture3`方法，获取三个返回值。举个例子，如下
+
+```ruby
+require 'open3'
+stdout, stderr, status = Open3.capture3("ls")
+if status.success?
+  # success
+else
+  # failure
+end
+```
+
+说明
+
+> `Open3`库是Ruby内置库，可以直接使用。示例代码，见07_git-batch.rb
+
+
+
+
+
+
+
+## 6、Modules and Classes
 
 ### （1）Object Hierarchy
 
@@ -362,7 +1001,7 @@ print Class.ancestors.inspect
 
 
 
-### （5）class & module
+### （5）class vs. module
 
 | 特性         | class对象                           | module对象                            |
 | ------------ | ----------------------------------- | ------------------------------------- |
@@ -387,647 +1026,7 @@ print Class.ancestors.inspect
 
 
 
-### （6）class variable & class instance variable
-
-
-
-
-
-### （7）Common Objects
-
-### File
-
-用于操作文件或目录
-
-
-
-* 重命名文件或文件夹[^10]
-
-```ruby
-File.rename './my-directory', './my-renamed-directory'
-```
-
-
-
-
-
-## 2、Ruby Literals Data Type
-
-Ruby中所有数据都是基于类的，即基本类型（整型、浮点数）也是对象。literals数据类型，有如下几种[^2]
-
-- Booleans and nil（TrueClass/FalseClass、NilClass）
-- Numbers（Integer、Float、Fixnum）
-- Strings（String）
-- Symbols（Symbol）
-- Arrays（Array）
-- Hashes（Hash）
-- Ranges（Range）
-- Regular Expressions（Regexp）
-- Procs（Proc）
-
-
-
-irb中输出，如下
-
-```ruby
-2.4.0 :001 > true.class
- => TrueClass 
-2.4.0 :002 > false.class
- => FalseClass 
-2.4.0 :003 > nil.class
- => NilClass 
-2.4.0 :004 > "Ruby".class
- => String 
-2.4.0 :005 > 1.class
- => Integer 
-2.4.0 :006 > 4.5.class
- => Float 
-2.4.0 :007 > 3_463_456_457.class
- => Integer 
-2.4.0 :008 > :age.class
- => Symbol 
-2.4.0 :009 > [1, 2, 3].class
- => Array 
-2.4.0 :010 > h = {:name => "Jane", :age => 17}
- => {:name=>"Jane", :age=>17} 
-2.4.0 :011 > h.class
- => Hash 
-2.4.0 :012 > (1..2).class
- => Range 
-2.4.0 :013 > /.*/.class
- => Regexp 
-2.4.0 :014 > -> { 1 + 1 }.class
- => Proc 
-```
-
-> 示例代码见data_type.rb
-
-
-
-### （1）String
-
-
-
-#### sub方法和gsub方法
-
-String提供sub实例方法和gsub实例方法，用字符串替换。
-
-* sub实例方法，只替换满足匹配的首个字符串
-* gsub（global sub）实例方法，全局替换满足匹配的所有字符串
-
-> sub和gsub方法，对应有修改入参字符串的版本：sub!和gsub!方法
-
-
-
-以gsub方法为例，其方法签名，如下
-
-```ruby
-gsub(pattern, replacement) → new_str
-gsub(pattern, hash) → new_str
-gsub(pattern) {|match| block } → new_str
-gsub(pattern) → enumerator
-```
-
-pattern参数，可以是字符串或者Regexp对象。
-
-举个例子，如下
-
-```ruby
-def gsub_with_string_pattern(string)
-  string.gsub('potato', 'banana')
-end
-
-def gsub_with_Regexp_pattern(string)
-  string.gsub(/p[a-zA-Z]+o/, 'banana')
-end
-
-def gsub_with_Regexp_pattern_anchored(string)
-  string.gsub(/^p[a-zA-Z]+o$/, 'banana')
-end
-
-dump_object(gsub_with_string_pattern("One potato, two potato, three potato, four."))
-dump_object(gsub_with_Regexp_pattern("One potato, two potato, three potato, four."))
-dump_object(gsub_with_Regexp_pattern_anchored("One potato, two potato, three potato, four."))
-```
-
-注意，pattern参数是字符串，即使字符串是正则表达式，不会按照正则匹配。举个例子，如下
-
-```ruby
-def gsub_with_string_pattern_literal(string)
-  string.gsub('\d+', "[number]")
-end
-
-dump_object(gsub_with_string_pattern_literal("ff001.png"))
-dump_object(gsub_with_string_pattern_literal('pattern is \d+')) # output: "pattern is [number]"
-```
-
-
-
-#### gsub方法的capture group
-
-gsub方法，支持将满足正则匹配的字符串换成动态的捕获变量值。举个例子，如下
-
-```ruby
-def regexp_capture_group(string)
-  string.gsub(/(\d+)/, '\1')
-end
-
-def regexp_capture_group_anchored(string)
-  string.gsub(/[a-zA-Z]*(\d+)/, '\1')
-end
-
-dump_object(regexp_capture_group('aaa074')) # output: "aaa074"
-dump_object(regexp_capture_group_anchored('aaa074')) # output: "074"
-```
-
-* aaa074按照`/(\d+)/`匹配，满足匹配的是074换成捕获变量值074，所以最终替换后的字符串是aaa074
-* aaa074按照`/[a-zA-Z]*(\d+)/`匹配，满足匹配的是aaa074换成捕获变量值074，所以最终替换后的字符串是074
-
-
-
-### （2）Regexp
-
-Regexp类用于表示正则表达式。
-
-
-
-#### 初始化Regexp
-
-Regexp初始化有三种方式
-
-* /xxx/方式
-* %r{xxx}方式
-* 使用new方法的方式
-
-举个例子，如下
-
-```ruby
-def create_with_forward_slashes
-  return /hay/
-end
-
-def create_with_r_percent_literal
-  return %r{hay}
-end
-
-def create_with_new
-  return Regexp.new('hay')
-end
-```
-
-> 示例方法，见data_type_Regexp_create.rb
-
-
-
-#### match方法
-
-Regexp实例提供match方法，用于匹配字符串。如果存在匹配，则该方法返回MatchData实例，否则返回nil。
-
-举个例子，如下
-
-```ruby
-def create_with_forward_slashes
-  return /hay/
-end
-
-match_data = create_with_forward_slashes.match('haystack')
-
-dump_object(match_data)
-dump_object("original string: #{match_data.string}")
-dump_object("matched string: #{match_data.to_s}")
-```
-
-MatchData的string方法返回原始需要匹配的字符串，而to_s方法返回满足匹配的字符串。
-
-
-
-
-
-## 3、Ruby Method
-
-### （1）特殊方法修饰
-
-#### a. dangerous方法
-
-```ruby
-class String
-  def dangerous_method!
-    self.upcase!; # Note: change self itself
-  end
-end
-
-def test_dangerous_method
-  foo = 'this is a string'
-  foo.dangerous_method! # Note: change foo itself
-  puts foo
-end
-```
-
-​      Ruby约定，方法名以`!`结尾，表示这个方法会修改对象本身或者对象内部状态，称为dangerous方法。例如String的`upcase!`方法。
-
-
-
-#### b. 返回值类型为bool的方法
-
-​       Ruby约定，方法名以`?`结尾，表示这个方法的返回值类型是bool，例如Object提供的`is_a?`函数和`kind_of?`函数。
-
-
-
-### （2）方法传参方式[^3]
-
-Ruby方法传参方式，归纳有下面几种
-
-- 正常传参方式，参数有序性
-- 可选参数，参数有序性
-- keyword参数，参数无序性
-- 可变参数列表
-
-> 示例代码，见
->
-> method_argument_1_normal.rb
->
-> method_argument_2_optional.rb
->
-> method_argument_3_keyword.rb
->
-> method_argument_4_variable_list_as_array.rb
->
-> method_argument_5_variable_list_as_hash.rb
-
-
-
-#### a. 正常传参方式
-
-正常传参方式：实参和形参是一一对应的，而且实参要保证顺序。
-
-
-
-举个例子，如下
-
-```ruby
-def write(file, data, mode)
-  ...
-end
-```
-
-write方法有三个参数，必须按照顺序传入3个实参。
-
-
-
-#### b. 可选参数
-
-可选参数：参数有默认值，该形参对应的实参可以不传，使用默认值。
-
-
-
-注意：
-
-> 1. 两个及以上可选参数总是位于正常参数之后，而且可选参数可以有多个。否则，脚本执行报错。
->
-> 举个错误的例子，如下
->
-> ```ruby
-> def write3(file, data, mode = "w", size, name = "default")
-> end
-> 
-> $ syntax error, unexpected '=', expecting ')'
-> data, mode = "w", size, name = "default")
->                            ^
-> $ syntax error, unexpected ')', expecting end-of-input
-> = "w", size, name = "default")
->                            ^
-> ```
->
-> 正确形式是
->
-> ```ruby
-> def write3_fixed(file, data, size, mode = "w", name = "default")
-> end
-> ```
->
-> 2. 一个可选参数，允许在正常参数之前。举个例子，如下
->
-> ```ruby
-> def write2(file = 'default', data, mode, size)
->   ...
-> end
-> 
-> ```
->
-> 调用根据参数个数，自动匹配对应参数，如下
->
-> write2(`data` "cats are cool!", `mode` "w", `size` 10)
-> write2(`file` "cats.txt", `data` "cats are cool!", `mode` "r", `size` 10)
-
-
-
-
-
-#### c. keyword参数
-
-keyword参数，指形参后面跟一个冒号，表示实参必须以键值对的形式传入。
-
-keyword参数的好处是实参可以不用保序，而且调用有key做描述，不用转到方法签名处，更加清楚。
-
-
-
-举个例子
-
-```ruby
-# Note: the last is optional keyword argument
-def write(file:, data:, mode: "rw")
-  ...
-end
-
-# Note: keyword argument mixed with normal argument
-def write2(file, data:, mode: "rw")
-  ...
-end
-
-write(data: 123, file: "test.txt")
-write2("test.txt", data: 123, mode: 'r')
-```
-
-注意：
-
-> keyword参数，要求实参必须以键值对的形式传入，否则脚本执行出错
-
-
-
-#### d. 可变参数列表
-
-可变参数列表分为两种：传入多个正常参数，和传入多个keyword参数
-
-
-
-##### 1. 传入多个正常参数，可用splat operator(`*`)来接收
-
-举个例子
-
-```ruby
-def print_all(*args)
-  # Note: args is an array, but *args is a placeholder which expanded as literal elements
-  dump_object(args)
-
-  # Note: expand *args as 1, 2, 3, 4, 5
-  method_with_5_args(*args)
-end
-
-print_all(1, 2, 3, 4, 5)
-```
-
-在print_all函数中args变成一个数组对象，如果再对它使用splat operator(`*`)，则展开为字面数组。例如`method_with_5_args(*args)`，*arg展开为5个参数传给method_with_5_args函数
-
-
-
-##### 2. 传入多个keyword参数，可用double splat operator(`**`)来接收
-
-举个例子
-
-```ruby
-def print_all(**args)
-  # Note: args is a hash
-  dump_object(args)
-
-  # Note: expand *args as [:x, 1], [:y, 2]
-  method_with_2_arguments *args
-
-  # Note: **args also a hash
-  dump_object(**args)
-end
-
-print_all(x: 1, y: 2)
-```
-
-在print_all函数中args变成一个Hash对象，而*args将Hash对象转成数组，**args还是本身的Hash对象
-
-
-
-#### e. 混合多种传参方式
-
-根据上面几种传参方式，可以混合使用，因此存在优先级：required -> optional -> variable -> keyword
-
-```ruby
-# Note: required -> optional -> variable -> keyword
-def testing(a, b = 1, *c, d: 1, **x)
-  # p a,b,c,d,x
-  dump_object(a)
-  dump_object(b)
-  dump_object(c)
-  dump_object(d)
-  dump_object(x)
-end
-
-testing('a', 'b', 'c', 'd', 'e', d: 2, x: 1)
-```
-
-`**x`和d: 1都属于keyword参数，`*c`属于variable参数
-
-> 示例代码，见method_argument_6_mixed.rb
-
-
-
-#### d. 接收所有参数
-
-Ruby方法传参可以使用通配符`*`，接收所有参数。此方式不常见，但配合super方法可以将参数透传给父类方法。
-
-举个例子，如下
-
-```ruby
-class Food
-  def nutrition(vitamins, minerals)
-    puts vitamins
-    puts minerals
-  end
-end
-
-class Bacon < Food
-  def nutrition(*)
-    super
-  end
-end
-
-bacon = Bacon.new
-bacon.nutrition("B6", "Iron")
-```
-
-Food的nutrition方法的参数个数修改了，不影响子类Bacon的nutrition方法。
-
-
-
-### （4）代码注释方式[^4]
-
-Ruby的单行注释使用`#`，而多行注释则有下面几种方式
-
-```ruby
-# 1. =begin...=end
-
-=begin
-Every body mentioned this way
-to have multiline comments.
-
-The =begin and =end must be at the beginning of the line or
-it will be a syntax error.
-=end
-
-# 2. Here doc style
-
-<<-DOC
-Also, you could create a docstring.
-which...
-DOC
-
-# 3. literal string
-
-"..is kinda ugly and creates
-a String instance, but I know one guy
-with a Smalltalk background, who
-does this."
-
-# 4. sharp sign
-
-##
-# most
-# people
-# do
-# this
-
-# 5. __END__ sign
-
-__END__
-
-But all forgot there is another option.
-Only at the end of a file, of course.
-```
-
-> 示例代码，见comment_block.rb
-
-
-
-### （5）方法的block参数[^6]
-
-
-
-#### a. Ruby方法传block参数
-
-
-
-Ruby方法可以使用block传参，需要使用`yield`以及`block_given?`来调用和检查block。
-
-* `yield`，在ruby方法中使用`yield`调用block，可以将block需要的参数，传给`yield`
-* `block_given?`，用于检查方法的参数中是否block传入。如果不检查，传入非block参数，用`yield`调用会出现异常
-
-举个例子，如下
-
-```ruby
-def my_method
-  puts "reached the top"
-  # Note: call the block parameter by using `yield`
-  status = yield("John", 2) if block_given?
-  puts "reached the bottom"
-  puts "status code: #{status}"
-end
-
-my_method do |name, age|
-  puts "Hello, #{name} in #{age} years old"
-  puts "reached yield"
-  1
-end
-```
-
-
-
-#### b. Ruby方法同时传正常参数和block参数
-
-Ruby方法允许同时传正常参数和block参数，但是block参数有且仅有一个[^6]，而且总是在最后一个。
-
-举个例子，如下
-
-```ruby
-def my_map(array)
-  new_array = []
-
-  for element in array
-    new_array.push yield element if block_given?
-  end
-
-  new_array
-end
-
-result = my_map([1, 2, 3]) do |number|
-  number * 2
-end
-
-puts result
-```
-
-my_map方法，实际上接收两个参数，一个参数是数组，另一个参数是block
-
-> 示例代码，见block_4_method_normal_parameter_and_block_parameter.rb
-
-
-
-### （6）常用Ruby Method
-
-#### a. system
-
-格式：**system([env,] command... [,options]) → true, false or nil**
-
-作用：产生一个子shell，执行command
-
-说明：
-
-返回nil，表示命令执行出错。
-
-返回true，表示命令执行返回状态为0。
-
-返回false，表示命令执行返回状态为非0。
-
-官方描述，如下
-
-> system returns `true` if the command gives zero exit status, `false` for non zero exit status. Returns `nil` if command execution fails. An error status is available in `$?`.
-
-
-
-除了使用system方法，还有下面的几种方式获取shell command输出结果[^7]
-
-但是下面几种方式，执行命令，但是都不能完全得到命令的正常输出以及错误输出。
-
-```ruby
-exec("echo 'hello world'") # exits from ruby, then runs the command
-system('echo', 'hello world') # returns the status code
-sh('echo', 'hello world') # returns the status code
-`echo "hello world"` # returns stdout
-%x[echo 'hello world'] # returns stdout
-```
-
-
-
-可以使用`Open3.capture3`方法，获取三个返回值。举个例子，如下
-
-```ruby
-require 'open3'
-stdout, stderr, status = Open3.capture3("ls")
-if status.success?
-  # success
-else
-  # failure
-end
-```
-
-说明
-
-> `Open3`库是Ruby内置库，可以直接使用。示例代码，见07_git-batch.rb
-
-
-
-
-
-## 4、Ruby Module
-
-
-
-### （1）module的mix-ins功能[^12]
+### （6）Module的mix-ins功能[^12]
 
 mix-ins功能，是指通过include或者prepend语句，将某个module的方法和常量导入到其他module或者类中。
 
@@ -1202,13 +1201,96 @@ p.logger.debug "just a test"
 
 
 
+## 7、Exceptions
+
+TODO
+
+## 8、Precedence
+
+TODO
+
+## 9、Refinements
+
+TODO
+
+## 10、Miscellaneous
+
+TODO
+
+## 11、Comments
+
+### （1）代码注释方式[^4]
+
+Ruby的单行注释使用`#`，而多行注释则有下面几种方式
+
+```ruby
+# 1. =begin...=end
+
+=begin
+Every body mentioned this way
+to have multiline comments.
+
+The =begin and =end must be at the beginning of the line or
+it will be a syntax error.
+=end
+
+# 2. Here doc style
+
+<<-DOC
+Also, you could create a docstring.
+which...
+DOC
+
+# 3. literal string
+
+"..is kinda ugly and creates
+a String instance, but I know one guy
+with a Smalltalk background, who
+does this."
+
+# 4. sharp sign
+
+##
+# most
+# people
+# do
+# this
+
+# 5. __END__ sign
+
+__END__
+
+But all forgot there is another option.
+Only at the end of a file, of course.
+```
+
+> 示例代码，见comment_block.rb
 
 
 
 
-## 3、常用Ruby库
+
+## 12、常用基础Class和Module
+
+### （1）File
+
+用于操作文件或目录
 
 
+
+* 重命名文件或文件夹[^10]
+
+```ruby
+File.rename './my-directory', './my-renamed-directory'
+```
+
+
+
+
+
+
+
+## 13、常用Ruby库
 
 ### （1）json库
 
@@ -1650,7 +1732,11 @@ missing argument: -r
 
 
 
-## 4、常用Ruby Tips
+
+
+
+
+## 14、常用Ruby Tips
 
 ### （1）Shell和Ruby脚本通信
 
@@ -1902,7 +1988,7 @@ bike.change_gear(1) # AbstractInterface::InterfaceNotImplementedError: AcmeBicyc
 
 
 
-## 5、RDoc语法
+## 15、RDoc语法
 
 [RDoc](https://ruby.github.io/rdoc/)是Ruby代码的注释生成文档的工具，包括rdoc和ri两个工具。这个[Cheatsheet](https://devhints.io/rdoc)提供RDoc支持注释形式。
 
@@ -1951,9 +2037,7 @@ YARD支持的[tag列表](https://www.rubydoc.info/gems/yard/file/docs/Tags.md#Ta
 
 
 
-## 6、gem命令使用
-
-
+## 16、gem命令使用
 
 ### （1）常用命令
 
@@ -1976,8 +2060,6 @@ https://gems.ruby-china.com/
 
 ### （3）常用Gem
 
-
-
 | gem名称              | 作用                          |
 | -------------------- | ----------------------------- |
 | update_xcode_plugins | 安装Xcode Plugin后重签名Xcode |
@@ -1986,9 +2068,7 @@ https://gems.ruby-china.com/
 
 
 
-## 7、使用RVM（Ruby Version Manager）
-
-
+## 17、使用RVM（Ruby Version Manager）
 
 ### （1）安装RVM
 
@@ -2018,11 +2098,7 @@ $ source /Users/wesley_chen/.rvm/scripts/rvm
 
 ## 附录
 
-
-
 ### （1）Ruby预定义变量[^1]
-
-
 
 | 变量名 | 值类型 | 作用                                                    |
 | ------ | ------ | ------------------------------------------------------- |
