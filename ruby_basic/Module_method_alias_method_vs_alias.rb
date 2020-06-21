@@ -36,7 +36,7 @@ end
 
 
 def test_alias_method
-  puts "-- #{__method__} --"
+  puts "--- #{__method__} ---"
 
   m = Microwave1.new
 
@@ -45,7 +45,7 @@ def test_alias_method
 end
 
 def test_alias
-  puts "-- #{__method__} --"
+  puts "--- #{__method__} ---"
 
   m = Microwave2.new
 
