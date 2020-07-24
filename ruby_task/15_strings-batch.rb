@@ -1,16 +1,7 @@
-#!/usr/bin/env ruby
 #encoding: utf-8
 
-<<-DOC
-The nm batch tool for searching symbols in a directory recursively
-DOC
-
 require 'optparse'
-require 'open3'
-require 'colored2'
-require 'benchmark'
-
-#require_relative '../ruby_tool/ruby_tools'
+require_relative '../ruby_tool/ruby_tools'
 
 $default_exclude_list = %w(
 c
@@ -35,7 +26,7 @@ wvc
 xib
 )
 
-class NmUtility
+class StringsUtility
 
   attr_accessor :cmd_parser
   attr_accessor :cmd_options
@@ -45,19 +36,12 @@ class NmUtility
     self.cmd_options = {}
 
     self.cmd_parser = OptionParser.new do |opts|
-      opts.banner = "Usage: #{__FILE__} PATH/TO/FOLDER -s symbol1,symbol2,... [options]"
-      opts.separator ""
-      opts.separator "在指定目录nm搜索特定的符号"
-      opts.separator "Examples:"
-      opts.separator "ruby #{__FILE__ } PATH/TO/FOLDER -s 'OBJC_CLASS_$_XXX' -v"
-      opts.separator "ruby #{__FILE__ } PATH/TO/FOLDER -s XXX -d"
+      opts.banner = "Usage: #{__FILE__} PATH/TO/FOLDER -s string1,string2,... [options]"
+      opts.separator  ""
+      opts.separator  "在指定目录strings搜索特定的符号"
 
-      opts.on("-v", "--[no-]verbose", "Run verbosely") do |toggle|
-        self.cmd_options[:verbose] = toggle
-      end
-
-      opts.on("-d", "--[no-]debug", "Run in debug mode") do |toggle|
-        self.cmd_options[:debug] = toggle
+      opts.on("-v", "--[no-]verbose", "Run verbosely") do |v|
+        self.cmd_options[:verbose] = v
       end
 
       opts.on("-i", "--include_exts suffix1,suffix2,...", Array, "included files with ext") do |include_list|
@@ -96,7 +80,6 @@ class NmUtility
 
     include_list = Array(self.cmd_options[:include_list])
     exclude_list = self.cmd_options[:exclude_list].nil? ? $default_exclude_list : Array(self.cmd_options[:exclude_list])
-    debug = self.cmd_options[:debug]
     verbose = self.cmd_options[:verbose]
 
     if !File.directory?(dir_path)
@@ -104,13 +87,12 @@ class NmUtility
       return
     end
 
-    # Note: not use `/**/*` instead of `**{,/*/**}/*`, so Dir.glob can search following the linking folders
-    # @see https://stackoverflow.com/a/2724048
     Dir.glob(dir_path + '/**{,/*/**}/*') do |item|
       next if item == '.' or item == '..'
 
+      dump_object(item)
+
       if !File.directory?(item) && File.exist?(item)
-        # puts "stub1"
 
         # @see https://stackoverflow.com/questions/16902083/exclude-the-from-a-file-extension-in-rails
         file_ext = File.extname(item).delete('.')
@@ -119,24 +101,18 @@ class NmUtility
         end
 
         if include_list.empty? or include_list.include?(file_ext) or file_ext == ''
+
           # Note: lookup symbols for every file
           symbol_list.each do |symbol|
-            command = "nm -m \"#{item}\" 2>/dev/null | grep '#{symbol}'"
-            if debug
-              puts command.cyan
+            if verbose
+              puts "strings -o \"#{item}\" 2>/dev/null | grep #{symbol}"
             end
 
-            stdout, stderr, status = Open3.capture3(command)
+            `strings -o "#{item}" 2>/dev/null | grep #{symbol}`
+            result = $?.success?
 
-            if status.success?
-              puts "Find symbol #{symbol} in #{item}".green
-              if verbose and !stdout.empty?
-                puts "#{stdout}".blue
-              end
-            else
-              if verbose and !stderr.empty?
-                puts "#{stderr}".red
-              end
+            if result
+              puts "Find string symbol `#{symbol}` in #{item}"
             end
           end
 
@@ -147,9 +123,4 @@ class NmUtility
   end
 end
 
-# @see https://stackoverflow.com/a/29166478
-time = Benchmark.measure {
-  NmUtility.new.run
-}
-
-puts "Completed with #{time.real} s.".magenta
+StringsUtility.new.run
