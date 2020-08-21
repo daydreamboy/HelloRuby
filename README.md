@@ -2062,37 +2062,6 @@ YARD支持的[tag列表](https://www.rubydoc.info/gems/yard/file/docs/Tags.md#Ta
 
 
 
-## 17、gem命令使用
-
-### （1）常用命令
-
-| 命令                            | 作用                   |
-| ------------------------------- | ---------------------- |
-| gem help commands               | 打印所有命令的帮助信息 |
-| gem help COMMAND                | 查看特定命令的帮助信息 |
-| gem sources --list              | 查看gem源列表          |
-| gem sources --add SOURCE_URI    | 添加特定的源           |
-| gem sources --remove SOURCE_URI | 删除特定的源           |
-|                                 |                        |
-
-
-
-### （2）gem源列表
-
-https://gems.ruby-china.com/
-
-
-
-### （3）常用Gem
-
-| gem名称              | 作用                          |
-| -------------------- | ----------------------------- |
-| update_xcode_plugins | 安装Xcode Plugin后重签名Xcode |
-
-
-
-
-
 ## 18、使用RVM（Ruby Version Manager）
 
 ### （1）安装RVM
@@ -2123,12 +2092,109 @@ $ source /Users/wesley_chen/.rvm/scripts/rvm
 
 ## 附录
 
-### （1）Ruby预定义变量[^1]
+### 1、Ruby预定义变量[^1]
 
 | 变量名 | 值类型 | 作用                                                    |
 | ------ | ------ | ------------------------------------------------------- |
 | ARGV   | Array  | 命令行参数（除ruby脚本文件名之外的参数），是`$*.`的别名 |
 | ENV    | Hash   | 当前shell的环境变量                                     |
+
+
+
+### 2、gem命令使用
+
+#### （1）常用命令
+
+| 命令                            | 作用                                            |
+| ------------------------------- | ----------------------------------------------- |
+| gem help commands               | 打印所有命令的帮助信息                          |
+| gem help COMMAND                | 查看特定命令的帮助信息                          |
+| gem sources --list              | 查看gem源列表                                   |
+| gem sources --add SOURCE_URI    | 添加特定的源                                    |
+| gem sources --remove SOURCE_URI | 删除特定的源                                    |
+| gem environment                 | 打印gem的环境[^18]。可以使用gem env命令模糊匹配 |
+| gem which <gem name>            | 查找特定gem的入口文件[^19]                      |
+
+
+
+##### gem environment
+
+```shell
+$ gem environment 
+RubyGems Environment:
+  - RUBYGEMS VERSION: 3.0.6
+  - RUBY VERSION: 2.6.3 (2019-04-16 patchlevel 62) [x86_64-darwin18]
+  - INSTALLATION DIRECTORY: /Users/wesley_chen/.rvm/gems/ruby-2.6.3
+  - USER INSTALLATION DIRECTORY: /Users/wesley_chen/.gem/ruby/2.6.0
+  - RUBY EXECUTABLE: /Users/wesley_chen/.rvm/rubies/ruby-2.6.3/bin/ruby
+  - GIT EXECUTABLE: /usr/local/bin/git
+  - EXECUTABLE DIRECTORY: /Users/wesley_chen/.rvm/gems/ruby-2.6.3/bin
+  - SPEC CACHE DIRECTORY: /Users/wesley_chen/.gem/specs
+  - SYSTEM CONFIGURATION DIRECTORY: /Users/wesley_chen/.rvm/rubies/ruby-2.6.3/etc
+  - RUBYGEMS PLATFORMS:
+    - ruby
+    - x86_64-darwin-18
+  - GEM PATHS:
+     - /Users/wesley_chen/.rvm/gems/ruby-2.6.3
+     - /Users/wesley_chen/.rvm/rubies/ruby-2.6.3/lib/ruby/gems/2.6.0
+  - GEM CONFIGURATION:
+     - :update_sources => true
+     - :verbose => true
+     - :backtrace => false
+     - :bulk_threshold => 1000
+     - :sources => ["https://rubygems.org/", "http://gems.alibaba-inc.com/"]
+     - :concurrent_downloads => 8
+  - REMOTE SOURCES:
+     - https://rubygems.org/
+     - http://gems.alibaba-inc.com/
+  - SHELL PATH:
+     - /Users/wesley_chen/.rvm/gems/ruby-2.6.3/bin
+     - /Users/wesley_chen/.rvm/gems/ruby-2.6.3@global/bin
+     - /Users/wesley_chen/.rvm/rubies/ruby-2.6.3/bin
+     - /Users/wesley_chen/.jenv/shims
+     - /Users/wesley_chen/.jenv/bin
+     - /usr/local/opt/icu4c/sbin
+     - /usr/local/opt/icu4c/bin
+     - /Users/wesley_chen/.tbenv/script
+     - /usr/local/bin
+     - /usr/bin
+     - /bin
+     - /usr/sbin
+     - /sbin
+     - /Library/Apple/usr/bin
+     - /Users/wesley_chen/.rvm/bin
+     - /Users/wesley_chen/.mycli
+     - /Users/wesley_chen/GitHub_Projects/HelloFlutter/flutter/bin
+```
+
+
+
+##### gem which
+
+```shell
+$ gem which cocoapods
+/Users/wesley_chen/.rvm/gems/ruby-2.6.3/gems/cocoapods-1.9.3/lib/cocoapods.rb
+```
+
+
+
+
+
+
+
+#### （2）gem源列表
+
+https://gems.ruby-china.com/
+
+
+
+#### （3）常用Gem
+
+| gem名称              | 作用                          |
+| -------------------- | ----------------------------- |
+| update_xcode_plugins | 安装Xcode Plugin后重签名Xcode |
+
+
 
 
 
@@ -2167,6 +2233,9 @@ $ source /Users/wesley_chen/.rvm/scripts/rvm
 [^16]:https://www.jimmycuadra.com/posts/metaprogramming-ruby-class-eval-and-instance-eval/
 
 [^17]:https://stackoverflow.com/questions/199527/get-the-name-of-the-currently-executing-method
+
+[^18]:https://stackoverflow.com/a/19072136
+[^19]:https://stackoverflow.com/a/31540740
 
 
 
