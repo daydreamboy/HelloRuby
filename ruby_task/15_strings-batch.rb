@@ -90,7 +90,7 @@ class StringsUtility
     Dir.glob(dir_path + '/**{,/*/**}/*') do |item|
       next if item == '.' or item == '..'
 
-      dump_object(item)
+      # dump_object(item)
 
       if !File.directory?(item) && File.exist?(item)
 
