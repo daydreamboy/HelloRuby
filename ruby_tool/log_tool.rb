@@ -40,9 +40,24 @@ class Log
 
   ##
   # Debug
-  def self.d(msg)
+  def self.d(arg)
     # @@logger.debug(msg)
-    puts "[Debug] #{msg}".cyan
+    loc = caller_locations.first
+    line = File.read(loc.path).lines[loc.lineno - 1]
+
+    # get string started by `dump_object`
+    callerString = line[/#{__method__}\(.+\)/].to_s
+
+    # get parameter name of `dump_object`
+    argName = callerString[/\(.+\)/]
+
+    # get content of parenthesis
+    argNameStr = (argName && argName.gsub!(/^\(|\)?$/, '')) || 'empty'
+
+    filename = loc.path
+    lineNo = loc.lineno
+
+    puts "[Debug] #{filename}:#{lineNo}: #{argNameStr} = (#{arg.class}) #{arg.inspect}".cyan
   end
 
   ##
