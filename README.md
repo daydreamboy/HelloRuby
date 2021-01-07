@@ -292,13 +292,40 @@ end
 
 ​      Ruby约定，方法名以`!`结尾，表示这个方法会修改对象本身或者对象内部状态，称为dangerous方法。例如String的`upcase!`方法。
 
-
+ 
 
 #### b. 返回值类型为bool的方法
 
 ​       Ruby约定，方法名以`?`结尾，表示这个方法的返回值类型是bool，例如Object提供的`is_a?`函数和`kind_of?`函数。
 
 
+
+#### c. 类方法
+
+类方法有两种定义方式，一种是self.method，一种`class << self ... end`块中定义类方法[^20]。
+
+举个例子，如下
+
+```ruby
+class MyObject
+
+  # Note: style 1
+  def self.description
+    return 'This is a MyObject class'
+  end
+
+  # Note: style 2
+  class << self
+    def debug_description
+      return "This is a MyObject class: #{self}"
+    end
+  end
+end
+```
+
+
+
+> 示例代码，见method_class_method.rb
 
 
 
@@ -2236,6 +2263,8 @@ https://gems.ruby-china.com/
 
 [^18]:https://stackoverflow.com/a/19072136
 [^19]:https://stackoverflow.com/a/31540740
+
+[^20]:https://railsware.com/blog/better-ruby-choosing-convention-for-class-methods-definition/
 
 
 
