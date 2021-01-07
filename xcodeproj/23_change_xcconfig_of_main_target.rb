@@ -95,7 +95,7 @@ class PodfileTool
       end
     elsif key == 'HEADER_SEARCH_PATHS'
       value = config.attributes[key]
-      Log.d(value)
+      Log.d(value, debug)
 
       paths = value.split(' ').
           map {|item| item.strip }.
@@ -114,7 +114,6 @@ class PodfileTool
         paths.push(path)
       end
 
-      # dump_object(paths)
       paths.delete('$(inherited)')
       paths.map! {|item| '"' + item + '"' }
 

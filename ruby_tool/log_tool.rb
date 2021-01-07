@@ -27,56 +27,72 @@ class Log
 
   ##
   # Info
-  def self.i(msg)
+  def self.i(msg, disabled = false)
     # @@logger.info(msg)
-    puts msg
+
+    if !disabled
+      puts msg
+    end
   end
 
   ##
   # Verbose
-  def self.v(msg)
-    puts "[Verbose] #{msg}".blue
+  def self.v(msg, disabled = false)
+    if !disabled
+      puts "[Verbose] #{msg}".blue
+    end
   end
 
   ##
   # Debug
-  def self.d(arg)
+  def self.d(arg, disabled = false)
     # @@logger.debug(msg)
-    loc = caller_locations.first
-    line = File.read(loc.path).lines[loc.lineno - 1]
+    if !disabled
+      loc = caller_locations.first
+      line = File.read(loc.path).lines[loc.lineno - 1]
 
-    # get string started by `dump_object`
-    callerString = line[/#{__method__}\(.+\)/].to_s
+      # get string started by `dump_object`
+      callerString = line[/#{__method__}\(.+\)/].to_s
 
-    # get parameter name of `dump_object`
-    argName = callerString[/\(.+\)/]
+      # get parameter name of `dump_object`
+      argName = callerString[/\(.+\)/]
 
-    # get content of parenthesis
-    argNameStr = (argName && argName.gsub!(/^\(|\)?$/, '')) || 'empty'
+      # get content of parenthesis
+      argNameStr = (argName && argName.gsub!(/^\(|\)?$/, '')) || 'empty'
 
-    filename = loc.path
-    lineNo = loc.lineno
+      filename = loc.path
+      lineNo = loc.lineno
 
-    puts "[Debug] #{filename}:#{lineNo}: #{argNameStr} = (#{arg.class}) #{arg.inspect}".cyan
+      puts "[Debug] #{filename}:#{lineNo}: #{argNameStr} = (#{arg.class}) #{arg.inspect}".cyan
+    end
   end
 
   ##
   # Warning
-  def self.w(msg)
+  def self.w(msg, disabled = false)
     # @@logger.warn(msg)
-    puts "[Warning] #{msg}".yellow
+
+    if !disabled
+      puts "[Warning] #{msg}".yellow
+    end
+
   end
 
   ##
   # Error
-  def self.e(msg)
+  def self.e(msg, disabled = false)
     # @@logger.error(msg)
-    puts "[Error] #{msg}".red
+
+    if !disabled
+      puts "[Error] #{msg}".red
+    end
   end
 
   ##
   # Timing
-  def self.t(msg)
-    puts "[Measure] #{msg}".magenta
+  def self.t(msg, disabled = false)
+    if !disabled
+      puts "[Measure] #{msg}".magenta
+    end
   end
 end
