@@ -45,3 +45,20 @@ def dump_object(arg)
 
   puts "[Debug] #{filename}:#{lineNo}: #{argNameStr} = (#{arg.class}) #{arg.inspect}"
 end
+
+##
+# Dump info of method symbol
+#
+# Note: https://til-engineering.nulogy.com/Show-definition-of-a-method-at-runtime-in-Ruby/
+# Note: https://stackoverflow.com/a/3393706
+def dump_method(method_symbol, clz = nil, is_class_method = false)
+  if clz.nil?
+    puts "[Debug] `#{method_symbol}` at #{method(method_symbol).source_location.join(':')}"
+  else
+    if is_class_method
+      puts "[Debug] `#{method_symbol}` at #{clz.method(method_symbol).source_location.join(':')}"
+    else
+      puts "[Debug] `#{method_symbol}` at #{clz.instance_method(method_symbol).source_location.join(':')}"
+    end
+  end
+end
