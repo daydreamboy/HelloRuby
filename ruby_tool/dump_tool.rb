@@ -53,12 +53,18 @@ end
 # Note: https://stackoverflow.com/a/3393706
 def dump_method(method_symbol, clz = nil, is_class_method = false)
   if clz.nil?
-    puts "[Debug] `#{method_symbol}` at #{method(method_symbol).source_location.join(':')}"
+    method_variable = method(method_symbol)
   else
     if is_class_method
-      puts "[Debug] `#{method_symbol}` at #{clz.method(method_symbol).source_location.join(':')}"
+      method_variable = clz.method(method_symbol)
     else
-      puts "[Debug] `#{method_symbol}` at #{clz.instance_method(method_symbol).source_location.join(':')}"
+      method_variable = clz.instance_method(method_symbol)
     end
+  end
+
+  if not method_variable.nil?
+    puts "[Debug] `#{method_symbol}` at #{method_variable.source_location.join(':')} (original_name = `#{method_variable.original_name}`)"
+  else
+    puts "[Debug] not find `#{method_symbol}` method!"
   end
 end
