@@ -2,6 +2,24 @@ require 'colored2'
 require_relative '../ruby_tool/log_tool'
 
 class PodfileTool
+  ##
+  # change xcconfig files of the .xcodeproj which located in Podfile's folder
+  #
+  # @param [String]  podfile_path Pass __FILE__ usually
+  # @param [String]  key the key which in xcconfig file, e.g. 'OTHER_LDFLAGS'
+  # @param [Array]  list_to_remove the values to remove for the key
+  # @param [Array]  list_to_add the values to remove for the key
+  # @param [Array]  target_list the xcconfig belong which target. If nil, will change xcconfig for all targets
+  # @param [Bool]  debug If true, to print debug log
+  # @return [None]
+  #
+  # @example
+  #
+  # post_install do |installer|
+  #   require_relative './Scripts/change_xcconfig_of_main_target.rb'
+  #   PodfileTool.modify_xcconfig_attrs!(__FILE__, 'OTHER_LDFLAGS', ['-l"stdc++.6.0.9"'], nil, ["Target1", "Target2"])
+  # end
+  #
   def self.modify_xcconfig_attrs!(podfile_path, key, list_to_remove = nil, list_to_add = nil, target_list = nil, debug = false)
 
     if Array(list_to_remove).length == 0 && Array(list_to_add).length == 0
@@ -11,6 +29,7 @@ class PodfileTool
     podfile_dir = File.expand_path File.dirname(podfile_path)
     xcodeproj_files = Dir.glob("#{podfile_dir}/*.xcodeproj")
     if xcodeproj_files.length != 1
+      Log.e "expect only a .xcodeproj, but multiple .xcodeproj files at #{podfile_dir}"
       return
     end
 
@@ -57,8 +76,8 @@ class PodfileTool
 
         # @see https://stackoverflow.com/questions/30276873/ruby-wrap-each-element-of-an-array-in-additional-quotes
         parts.map! do |item|
-          item.gsub!(/\A"|"\z/,'')
-          item.gsub!(/\A'|'\z/,'')
+          item.gsub!(/\A"|"\z/, '')
+          item.gsub!(/\A'|'\z/, '')
           item
         end.reject! do |item|
           if list_to_remove.nil?
@@ -98,11 +117,11 @@ class PodfileTool
       Log.d(value, debug)
 
       paths = value.split(' ').
-          map {|item| item.strip }.
-          reject {|item| item.empty? }.
+          map {|item| item.strip}.
+          reject {|item| item.empty?}.
           map {|item|
-            item.gsub!(/\A"|"\z/,'')
-            item.gsub!(/\A'|'\z/,'')
+            item.gsub!(/\A"|"\z/, '')
+            item.gsub!(/\A'|'\z/, '')
             item
           }
 
@@ -115,17 +134,17 @@ class PodfileTool
       end
 
       paths.delete('$(inherited)')
-      paths.map! {|item| '"' + item + '"' }
+      paths.map! {|item| '"' + item + '"'}
 
       config.attributes[key] = paths.insert(0, '$(inherited)').uniq.join(' ')
     elsif key == 'OTHER_CFLAGS'
       value = config.attributes[key]
       paths = value.split(' ').
-          map {|item| item.strip }.
-          reject {|item| item.empty? }.
+          map {|item| item.strip}.
+          reject {|item| item.empty?}.
           map {|item|
-            item.gsub!(/\A"|"\z/,'')
-            item.gsub!(/\A'|'\z/,'')
+            item.gsub!(/\A"|"\z/, '')
+            item.gsub!(/\A'|'\z/, '')
             item
           }
 
@@ -137,17 +156,17 @@ class PodfileTool
       end
 
       paired_list = []
-      (0..paths.length - 1).step(2).each { |index|
+      (0..paths.length - 1).step(2).each {|index|
         if !Array(list_to_remove).include?(paths[index + 1])
           paired_list.push([paths[index], paths[index + 1]])
         end
       }
 
-      Array(list_to_add).each { |item|
+      Array(list_to_add).each {|item|
         paired_list.push(['-iquote', item])
       }
 
-      flat_list = paired_list.map { |item|
+      flat_list = paired_list.map {|item|
         item[0] + ' ' + '"' + item[1] + '"'
       }
 
