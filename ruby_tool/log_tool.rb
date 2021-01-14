@@ -27,27 +27,26 @@ class Log
 
   ##
   # Info
-  def self.i(msg, disabled = false)
+  def self.i(msg, debug = true)
     # @@logger.info(msg)
-
-    if !disabled
+    if debug
       puts msg
     end
   end
 
   ##
   # Verbose
-  def self.v(msg, disabled = false)
-    if !disabled
+  def self.v(msg, debug = true)
+    if debug
       puts "[Verbose] #{msg}".blue
     end
   end
 
   ##
   # Debug
-  def self.d(arg, disabled = false)
+  def self.d(arg, debug = true)
     # @@logger.debug(msg)
-    if !disabled
+    if debug
       loc = caller_locations.first
       line = File.read(loc.path).lines[loc.lineno - 1]
 
@@ -69,10 +68,9 @@ class Log
 
   ##
   # Warning
-  def self.w(msg, disabled = false)
+  def self.w(msg, debug = true)
     # @@logger.warn(msg)
-
-    if !disabled
+    if debug
       puts "[Warning] #{msg}".yellow
     end
 
@@ -80,18 +78,17 @@ class Log
 
   ##
   # Error
-  def self.e(msg, disabled = false)
+  def self.e(msg, debug = true)
     # @@logger.error(msg)
-
-    if !disabled
+    if debug
       puts "[Error] #{msg}".red
     end
   end
 
   ##
   # Timing
-  def self.t(msg, disabled = false)
-    if !disabled
+  def self.t(msg, debug = true)
+    if debug
       puts "[Measure] #{msg}".magenta
     end
   end
