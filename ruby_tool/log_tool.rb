@@ -53,16 +53,25 @@ class Log
       # get string started by `dump_object`
       callerString = line[/#{__method__}\(.+\)/].to_s
 
-      # get parameter name of `dump_object`
-      argName = callerString[/\(.+\)/]
+      # get the part of (xxx)
+      parenthesis_part = callerString[/\(.+\)/]
 
-      # get content of parenthesis
-      argNameStr = (argName && argName.gsub!(/^\(|\)?$/, '')) || 'empty'
+      # check if match the format (xx, yy)
+      match_data = /^\((.+),(.+)\)$/.match(parenthesis_part)
+      if not match_data.nil?
+        captures = match_data.captures
+        if not captures.nil?
+          arg_name_str = captures[0]
+        end
+      else
+        # get content of parenthesis
+        arg_name_str = (parenthesis_part && parenthesis_part.gsub!(/^\(|\)?$/, '')) || 'empty'
+      end
 
       filename = loc.path
       lineNo = loc.lineno
 
-      puts "[Debug] #{filename}:#{lineNo}: #{argNameStr} = (#{arg.class}) #{arg.inspect}".cyan
+      puts "[Debug] #{filename}:#{lineNo}: #{arg_name_str} = (#{arg.class}) #{arg.inspect}".cyan
     end
   end
 
