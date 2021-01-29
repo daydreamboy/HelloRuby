@@ -1878,7 +1878,7 @@ dump_object("a")
 EOF
 ```
 
-> 示例见HelloShellScripts的18_ruby_code_within_shell.sh
+> 示例代码，见18_ruby_code_within_shell.sh
 
 
 
@@ -2037,6 +2037,30 @@ bike.change_gear(1) # AbstractInterface::InterfaceNotImplementedError: AcmeBicyc
 > 示例代码，见test_emulate_interface_by_AbstractInterface2.rb
 
 
+
+### （4）检查方法在源码中的位置
+
+​       Ruby的Method类有source_location方法，通过传入symbol来获取特定方法实例，然后使用source_location方法来获取方法实例相关信息[^21][^22]。
+
+```ruby
+def dump_method(method_symbol, clz = nil, is_class_method = false)
+  if clz.nil?
+    method_variable = method(method_symbol)
+  else
+    if is_class_method
+      method_variable = clz.method(method_symbol)
+    else
+      method_variable = clz.instance_method(method_symbol)
+    end
+  end
+
+  if not method_variable.nil?
+    puts "[Debug] `#{method_symbol}` at #{method_variable.source_location.join(':')} (original_name = `#{method_variable.original_name}`)"
+  else
+    puts "[Debug] not find `#{method_symbol}` method!"
+  end
+end
+```
 
 
 
@@ -2265,6 +2289,9 @@ https://gems.ruby-china.com/
 [^19]:https://stackoverflow.com/a/31540740
 
 [^20]:https://railsware.com/blog/better-ruby-choosing-convention-for-class-methods-definition/
+
+[^21]:https://stackoverflow.com/a/3393706
+[^22]:https://til-engineering.nulogy.com/Show-definition-of-a-method-at-runtime-in-Ruby/
 
 
 
