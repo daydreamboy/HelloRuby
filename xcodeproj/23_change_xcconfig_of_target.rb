@@ -83,7 +83,7 @@ class PodfileTool
     project.save(project_path)
   end
 
-  def self.change_other_ldflags!(config, change_map, debug = false)
+  def self.change_other_ldflags!(config, key, change_map, debug = false)
     library_to_remove = change_map[:library_to_remove]
     library_to_add = change_map[:library_to_add]
 
@@ -131,50 +131,54 @@ class PodfileTool
     Log.v("Change after #{key}: #{config.attributes[key]}", debug)
   end
 
+  def self.change_framework_or_library_search_path!(config, key, change_map, degbug = false)
+    value = config.attributes[key]
+    if value.nil?
+      if !list_to_add.nil?
+        list_to_add.map! do |item|
+          '"' + item + '"'
+        end
+
+        config.attributes[key] = list_to_add.insert(0, '$(inherited)').uniq.join(' ')
+      end
+    else
+      parts = value.split
+
+      # @see https://stackoverflow.com/questions/30276873/ruby-wrap-each-element-of-an-array-in-additional-quotes
+      parts.map! do |item|
+        item.gsub!(/\A"|"\z/, '')
+        item.gsub!(/\A'|'\z/, '')
+        item
+      end.reject! do |item|
+        if list_to_remove.nil?
+          false
+        else
+          list_to_remove.include? item
+        end
+      end
+
+      if !list_to_add.nil?
+        parts = parts + list_to_add
+      end
+
+      parts.map! do |item|
+        if item != '$(inherited)'
+          '"' + item + '"'
+        else
+          item
+        end
+      end
+
+      config.attributes[key] = parts.uniq.join(' ')
+    end
+  end
+
   def self.change_xcconfig_attrs!(config, config_map, debug = false)
     config_map.each { |key, change_map|
       if key == 'FRAMEWORK_SEARCH_PATHS' || key == 'LIBRARY_SEARCH_PATHS'
-        # value = config.attributes[key]
-        # if value.nil?
-        #   if !list_to_add.nil?
-        #     list_to_add.map! do |item|
-        #       '"' + item + '"'
-        #     end
-        #
-        #     config.attributes[key] = list_to_add.insert(0, '$(inherited)').uniq.join(' ')
-        #   end
-        # else
-        #   parts = value.split
-        #
-        #   # @see https://stackoverflow.com/questions/30276873/ruby-wrap-each-element-of-an-array-in-additional-quotes
-        #   parts.map! do |item|
-        #     item.gsub!(/\A"|"\z/, '')
-        #     item.gsub!(/\A'|'\z/, '')
-        #     item
-        #   end.reject! do |item|
-        #     if list_to_remove.nil?
-        #       false
-        #     else
-        #       list_to_remove.include? item
-        #     end
-        #   end
-        #
-        #   if !list_to_add.nil?
-        #     parts = parts + list_to_add
-        #   end
-        #
-        #   parts.map! do |item|
-        #     if item != '$(inherited)'
-        #       '"' + item + '"'
-        #     else
-        #       item
-        #     end
-        #   end
-        #
-        #   config.attributes[key] = parts.uniq.join(' ')
-        # end
+        self.change_framework_or_library_search_path!(config, key, change_map, debug)
       elsif key == 'OTHER_LDFLAGS'
-        self.change_other_ldflags!(config, change_map, debug)
+        self.change_other_ldflags!(config, key, change_map, debug)
       elsif key == 'HEADER_SEARCH_PATHS'
         self.change_header_search_path!(config, key, change_map, debug)
       elsif key == 'OTHER_CFLAGS'
