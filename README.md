@@ -1786,6 +1786,67 @@ missing argument: -r
 
 
 
+### （3）pathname库
+
+pathname库提供Pathname类，用于封装文件系统上的文件或文件夹的路径，但是不代表文件或文件夹本身。
+
+> Pathname represents the name of a file or directory on the filesystem, but not the file itself.
+
+Pathname类的实例是不可变的，没有destructive方法。
+
+> Pathname is immutable. It has no method for destructive update.
+
+值得一提的是，Pathname类采用Facade模式，内部使用File, FileTest, Dir和FileUtils完成特定功能。
+
+> All functionality from File, FileTest, and some from Dir and FileUtils is included, in an unsurprising way. It is essentially a facade for all of these, and more.
+
+
+
+#### 获取相对路径
+
+Pathname类提供relative_path_from方法，可以通过比较两个路径获取相对路径。
+
+
+
+relative_path_from是实例方法，签名如下
+
+```ruby
+relative_path_from(base_directory)
+```
+
+使用需要注意下面几点
+
+* 两个路径，必须都是绝对路径，或者都是相对路径
+* 不支持软链接的路径
+* 如果找不到相对路径，会有异常抛出
+
+官方文档描述，如下
+
+> If `self` is absolute, then `base_directory` must be absolute too.
+>
+> If `self` is relative, then `base_directory` must be relative too.
+>
+> This method doesn’t access the filesystem. It assumes no symlinks.
+>
+> ArgumentError is raised when it cannot find a relative path.
+
+
+
+举个例子，如下
+
+```ruby
+puts Pathname.new('/Users/wesley_chen/6/iOS/Pods/FDFullscreenPopGesture').relative_path_from(Pathname.new('/Users/wesley_chen/6/iOS/Pods/')).to_s
+# output: FDFullscreenPopGesture
+```
+
+> 示例代码，见pathname_relative_path_from.rb
+
+
+
+
+
+
+
 
 
 ## 15、常用Ruby Tips
