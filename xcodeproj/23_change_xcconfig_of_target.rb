@@ -176,6 +176,48 @@ class PodfileTool
     end
   end
 
+  # TODO test
+  def self.change_other_cflags!(config, key, change_map, debug = false)
+    flag_to_remove = change_map[:flag_to_remove]
+    flag_to_add = change_map[:flag_to_add]
+
+    value = config.attributes[key]
+    Log.d(value, debug)
+
+    paths = value.split(' ').
+        map {|item| item.strip}.
+        reject {|item| item.empty?}.
+        map {|item|
+          item.gsub!(/\A"|"\z/, '')
+          item.gsub!(/\A'|'\z/, '')
+          item
+        }
+
+    paths.delete('$(inherited)')
+
+    unless paths.length % 2 == 0
+      Log.e "`#{key}` should have paired key-values, but now is #{value}"
+      raise "`#{key}` should have paired key-values, but now is #{value}"
+    end
+
+    paired_list = []
+    (0..paths.length - 1).step(2).each {|index|
+      if not Array(flag_to_remove).include?(paths[index + 1])
+        paired_list.push([paths[index], paths[index + 1]])
+      end
+    }
+
+    Array(flag_to_add).each {|item|
+      paired_list.push(['-iquote', item])
+    }
+
+    flat_list = paired_list.map {|item|
+      item[0] + ' ' + '"' + item[1] + '"'
+    }
+
+    config.attributes[key] = flat_list.insert(0, '$(inherited)').uniq.join(' ')
+  end
+
   def self.change_xcconfig_attrs!(config, config_map, debug = false)
     config_map.each { |key, change_map|
       if key == 'FRAMEWORK_SEARCH_PATHS' || key == 'LIBRARY_SEARCH_PATHS'
@@ -185,41 +227,8 @@ class PodfileTool
       elsif key == 'HEADER_SEARCH_PATHS'
         self.change_header_search_path!(config, key, change_map, debug)
       elsif key == 'OTHER_CFLAGS'
-        # value = config.attributes[key]
-        # paths = value.split(' ').
-        #     map {|item| item.strip}.
-        #     reject {|item| item.empty?}.
-        #     map {|item|
-        #       item.gsub!(/\A"|"\z/, '')
-        #       item.gsub!(/\A'|'\z/, '')
-        #       item
-        #     }
-        #
-        # paths.delete('$(inherited)')
-        #
-        # unless paths.length % 2 == 0
-        #   Log.e "`#{key}` should have paired key-values, but now is #{value}"
-        #   raise "`#{key}` should have paired key-values, but now is #{value}"
-        # end
-        #
-        # paired_list = []
-        # (0..paths.length - 1).step(2).each {|index|
-        #   if !Array(list_to_remove).include?(paths[index + 1])
-        #     paired_list.push([paths[index], paths[index + 1]])
-        #   end
-        # }
-        #
-        # Array(list_to_add).each {|item|
-        #   paired_list.push(['-iquote', item])
-        # }
-        #
-        # flat_list = paired_list.map {|item|
-        #   item[0] + ' ' + '"' + item[1] + '"'
-        # }
-        #
-        # config.attributes[key] = flat_list.insert(0, '$(inherited)').uniq.join(' ')
+        self.change_other_cflags!(config, key, change_map, debug)
       end
     }
-
   end
 end
