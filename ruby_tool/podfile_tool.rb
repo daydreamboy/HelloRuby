@@ -1,5 +1,5 @@
 require 'colored2'
-require_relative '../ruby_tool/log_tool'
+require_relative './log_tool'
 
 class PodfileTool
   ##
