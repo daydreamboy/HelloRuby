@@ -1,6 +1,6 @@
 #encoding: utf-8
 #
-# The tool for generate key/values in .xcconfig
+# The facade tool for generate key/values in .xcconfig
 
 require_relative 'xcconfig_tool/FRAMEWORK_SEARCH_PATHS'
 

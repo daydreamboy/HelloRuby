@@ -72,11 +72,11 @@ class PodfileTool
         xcconfig_pathname = xcconfig.base_configuration_reference.real_path
         xcconfig_name = xcconfig.base_configuration_reference.name
         if File.exists?(xcconfig_pathname)
-          Log.v("Start modify xcconfig for `#{xcconfig_name}`")
+          Log.v("<<<Start modify xcconfig for `#{xcconfig_name}`")
           config = Xcodeproj::Config.new(File.new(xcconfig_pathname.to_path))
           change_xcconfig_attrs!(config, config_map, debug)
           config.save_as(xcconfig_pathname)
-          Log.v("End modify xcconfig for `#{xcconfig_name}`")
+          Log.v(">>>End modify xcconfig for `#{xcconfig_name}`")
         end
       end
     end
@@ -106,14 +106,18 @@ class PodfileTool
     value = config.attributes[key]
     Log.v("Change before #{key}: #{value}", debug)
 
-    paths = value.split(' ').
-        map {|item| item.strip}.
-        reject {|item| item.empty?}.
-        map {|item|
-          item.gsub!(/\A"|"\z/, '')
-          item.gsub!(/\A'|'\z/, '')
-          item
-        }
+    if not value.nil?
+      paths = value.split(' ').
+          map {|item| item.strip}.
+          reject {|item| item.empty?}.
+          map {|item|
+            item.gsub!(/\A"|"\z/, '')
+            item.gsub!(/\A'|'\z/, '')
+            item
+          }
+    else
+      paths = []
+    end
 
     Array(path_to_remove).each do |path|
       paths.delete(path)
@@ -176,46 +180,39 @@ class PodfileTool
     end
   end
 
-  # TODO test
   def self.change_other_cflags!(config, key, change_map, debug = false)
     flag_to_remove = change_map[:flag_to_remove]
     flag_to_add = change_map[:flag_to_add]
 
     value = config.attributes[key]
-    Log.d(value, debug)
+    Log.v("Change before #{key}: #{value}", debug)
 
-    paths = value.split(' ').
-        map {|item| item.strip}.
-        reject {|item| item.empty?}.
-        map {|item|
-          item.gsub!(/\A"|"\z/, '')
-          item.gsub!(/\A'|'\z/, '')
-          item
-        }
+    if not value.nil?
+      paths = value.split(' ').
+          map {|item| item.strip}.
+          reject {|item| item.empty?}.
+          map {|item|
+            item.gsub!(/\A"|"\z/, '')
+            item.gsub!(/\A'|'\z/, '')
+            item
+          }
+    else
+      paths = []
+    end
+
+    Array(flag_to_remove).each do |path|
+      paths.delete(path)
+    end
+
+    Array(flag_to_add).each do |path|
+      paths.push(path)
+    end
 
     paths.delete('$(inherited)')
 
-    unless paths.length % 2 == 0
-      Log.e "`#{key}` should have paired key-values, but now is #{value}"
-      raise "`#{key}` should have paired key-values, but now is #{value}"
-    end
+    config.attributes[key] = paths.insert(0, '$(inherited)').uniq.join(' ')
 
-    paired_list = []
-    (0..paths.length - 1).step(2).each {|index|
-      if not Array(flag_to_remove).include?(paths[index + 1])
-        paired_list.push([paths[index], paths[index + 1]])
-      end
-    }
-
-    Array(flag_to_add).each {|item|
-      paired_list.push(['-iquote', item])
-    }
-
-    flat_list = paired_list.map {|item|
-      item[0] + ' ' + '"' + item[1] + '"'
-    }
-
-    config.attributes[key] = flat_list.insert(0, '$(inherited)').uniq.join(' ')
+    Log.v("Change after #{key}: #{config.attributes[key]}", debug)
   end
 
   def self.change_xcconfig_attrs!(config, config_map, debug = false)
