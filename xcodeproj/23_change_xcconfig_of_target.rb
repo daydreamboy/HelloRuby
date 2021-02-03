@@ -132,14 +132,17 @@ class PodfileTool
   end
 
   def self.change_framework_or_library_search_path!(config, key, change_map, degbug = false)
+    path_to_remove = change_map[:path_to_remove]
+    path_to_add = change_map[:path_to_add]
+
     value = config.attributes[key]
     if value.nil?
-      if !list_to_add.nil?
-        list_to_add.map! do |item|
+      if not path_to_add.nil?
+        path_to_add.map! do |item|
           '"' + item + '"'
         end
 
-        config.attributes[key] = list_to_add.insert(0, '$(inherited)').uniq.join(' ')
+        config.attributes[key] = path_to_add.insert(0, '$(inherited)').uniq.join(' ')
       end
     else
       parts = value.split
@@ -150,15 +153,15 @@ class PodfileTool
         item.gsub!(/\A'|'\z/, '')
         item
       end.reject! do |item|
-        if list_to_remove.nil?
+        if path_to_remove.nil?
           false
         else
-          list_to_remove.include? item
+          path_to_remove.include? item
         end
       end
 
-      if !list_to_add.nil?
-        parts = parts + list_to_add
+      if not path_to_add.nil?
+        parts = parts + path_to_add
       end
 
       parts.map! do |item|
