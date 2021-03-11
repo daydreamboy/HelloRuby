@@ -1,4 +1,6 @@
 require 'colored2'
+require 'pathname'
+require 'fileutils'
 require_relative './log_tool'
 
 class PodfileTool
@@ -216,7 +218,7 @@ class PodfileTool
   end
 
   def self.change_xcconfig_attrs!(config, config_map, debug = false)
-    config_map.each { |key, change_map|
+    config_map.each {|key, change_map|
       if key == 'FRAMEWORK_SEARCH_PATHS' || key == 'LIBRARY_SEARCH_PATHS'
         self.change_framework_or_library_search_path!(config, key, change_map, debug)
       elsif key == 'OTHER_LDFLAGS'
@@ -227,5 +229,70 @@ class PodfileTool
         self.change_other_cflags!(config, key, change_map, debug)
       end
     }
+  end
+
+  ##
+  # Copy custom resource file or folder to Pods
+  #
+  # @param [Object]  podfile_path The path of Podfile
+  # @param [Object]  copy_config_map The copy mapping. key is source path, value is destination path.
+  #                  The source/destination path is relative to the Podfile
+  # @param [Object]  config_json_path The json for copy_config_map. The `config_json_path` is prior to the `copy_config_map`
+  # @param [Object]  debug The flag for debugging
+  # @return [Object]
+  #
+  # @example
+  #
+  # post_install do |installer|
+  #   PodfileTool.resource_copy(__FILE__, {
+  #     'Headers' => 'Pods/Headers'
+  #   }, './copy_map.json', true)
+  # end
+  #
+  def self.resource_copy(podfile_path, copy_config_map, config_json_path = nil, debug = false)
+    if config_json_path.nil? and (copy_config_map.nil? or copy_config_map.length == 0)
+      Log.e("parameter is wrong: #{config_json_path}, #{copy_config_map}", debug)
+      return
+    end
+
+    podfile_dir = File.expand_path File.dirname(podfile_path)
+
+    if not config_json_path.nil? and File.exist? config_json_path
+      begin
+        copy_config_map = JSON.parse IO.read config_json_path
+      rescue Exception => e
+        Log.e("an exception occurred: #{e}", debug)
+      end
+    end
+
+    copy_config_map.each do |source_path, dest_path|
+      source_absolute_path = Pathname.new(podfile_dir).join(source_path).to_s
+      dest_absolute_path = Pathname.new(podfile_dir).join(dest_path).to_s
+
+      if not File.exist? source_absolute_path
+        Log.v("source path not exists #{source_absolute_path}", debug)
+        next
+      end
+
+      if File.directory? source_absolute_path
+        Log.v("copy dir from `#{source_absolute_path}` to #{dest_absolute_path}", debug)
+
+        if Dir.exist? dest_absolute_path
+          FileUtils.remove_dir dest_absolute_path
+        end
+
+        FileUtils.cp_r source_absolute_path, dest_absolute_path
+
+      elsif File.file? source_absolute_path
+        Log.v("copy file from `#{source_absolute_path}` to #{dest_absolute_path}", debug)
+
+        if File.file? dest_absolute_path
+          FileUtils.remove_file dest_absolute_path
+        end
+
+        # Note: copy content of source path to dest path
+        FileUtils.cp source_absolute_path, dest_absolute_path
+      end
+    end
   end
 end

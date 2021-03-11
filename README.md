@@ -1295,6 +1295,14 @@ But all forgot there is another option.
 Only at the end of a file, of course.
 ```
 
+
+
+#### =begin/=end方式
+
+=begin/=end构成的块注释，=begin/=end必须在行首位置，不能有空格等。
+
+
+
 > 示例代码，见comment_block.rb
 
 
@@ -1843,7 +1851,56 @@ puts Pathname.new('/Users/wesley_chen/6/iOS/Pods/FDFullscreenPopGesture').relati
 
 
 
+#### （4）TestUnit[^23]
 
+TestUnit是Ruby的标准库，它提供基本的单元测试能力。
+
+
+
+**assert系列函数**
+
+```ruby
+require 'pathname'
+require 'test/unit/assertions'
+include Test::Unit::Assertions
+
+# Output: /Users/wesley_chen/6/iOS/Pods/FDFullscreenPopGesture
+output = Pathname.new('/Users/wesley_chen/6/iOS/Pods/').join('FDFullscreenPopGesture').to_s
+expected = '/Users/wesley_chen/6/iOS/Pods/FDFullscreenPopGesture'
+
+assert_equal expected, output, "Failed"
+```
+
+
+
+**TestCase**
+
+TestCase类需要继承使用，执行脚本，默认将全部的test前缀的实例方法自动执行。
+
+```ruby
+require 'test/unit'
+
+class Hello
+  def self.world
+    'world2'
+  end
+end
+
+class HelloTest < Test::Unit::TestCase
+  def setup
+  end
+
+  def test_world
+    assert_equal 'world', Hello.world, "Hello.world should return a string called 'world'"
+  end
+
+  def test_flunk
+    flunk "You shall not pass"
+  end
+end
+```
+
+示例代码，见TestUnit_TestCase.rb
 
 
 
@@ -2353,6 +2410,8 @@ https://gems.ruby-china.com/
 
 [^21]:https://stackoverflow.com/a/3393706
 [^22]:https://til-engineering.nulogy.com/Show-definition-of-a-method-at-runtime-in-Ruby/
+
+[^23]:https://dev.to/exampro/testunit-writing-test-code-in-ruby-part-1-of-3-44m2
 
 
 
