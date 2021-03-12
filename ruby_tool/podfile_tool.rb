@@ -1,6 +1,8 @@
 require 'colored2'
 require 'pathname'
 require 'fileutils'
+require 'optparse'
+require 'json'
 require_relative './log_tool'
 
 class PodfileTool
@@ -265,34 +267,99 @@ class PodfileTool
       end
     end
 
-    copy_config_map.each do |source_path, dest_path|
-      source_absolute_path = Pathname.new(podfile_dir).join(source_path).to_s
+    copy_config_map.each do |src_path, dest_path|
+      src_absolute_path = Pathname.new(podfile_dir).join(src_path).to_s
       dest_absolute_path = Pathname.new(podfile_dir).join(dest_path).to_s
 
-      if not File.exist? source_absolute_path
-        Log.v("source path not exists #{source_absolute_path}", debug)
+      if not File.exist? src_absolute_path
+        Log.v("source path not exists #{src_absolute_path}", debug)
         next
       end
 
-      if File.directory? source_absolute_path
-        Log.v("copy dir from `#{source_absolute_path}` to #{dest_absolute_path}", debug)
+      # Note: src -> dest
+      #       file  file, dest file replace by src file
+      #       file  folder, copy file to the underneath of folder
+      #       folder file, delete file, copy folder to the underneath of new created folder
+      #       folder folder, copy folder to the underneath of folder
+      if File.directory? src_absolute_path
+        Log.v("copy dir from `#{src_absolute_path}` to #{dest_absolute_path}", debug)
 
         if Dir.exist? dest_absolute_path
-          FileUtils.remove_dir dest_absolute_path
-        end
-
-        FileUtils.cp_r source_absolute_path, dest_absolute_path
-
-      elsif File.file? source_absolute_path
-        Log.v("copy file from `#{source_absolute_path}` to #{dest_absolute_path}", debug)
-
-        if File.file? dest_absolute_path
+          # Note:
+        elsif File.exist? dest_absolute_path
           FileUtils.remove_file dest_absolute_path
+        else
+          FileUtils.mkdir_p dest_absolute_path
         end
 
-        # Note: copy content of source path to dest path
-        FileUtils.cp source_absolute_path, dest_absolute_path
+        FileUtils.mkdir_p dest_absolute_path
+        FileUtils.cp_r src_absolute_path, dest_absolute_path
+      elsif File.file? src_absolute_path
+        Log.v("copy file from `#{src_absolute_path}` to #{dest_absolute_path}", debug)
+
+        if Dir.exist? dest_absolute_path
+          FileUtils.cp src_absolute_path, dest_absolute_path
+        elsif File.exist? dest_absolute_path
+          if File.file? dest_absolute_path
+            FileUtils.remove_file dest_absolute_path
+          else
+            FileUtils.remove_dir dest_absolute_path
+          end
+
+          # Note: make a copied file
+          src_path_copied = src_absolute_path + '.copy'
+
+          # Note: make folders for the dest_path
+          FileUtils.mkdir_p File.dirname dest_path
+
+          # Note: make a copied file and reserve the original file
+          FileUtils.cp src_absolute_path, src_path_copied
+
+          # Note: move the copied file to the dest file
+          FileUtils.mv src_path_copied, dest_absolute_path
+        end
       end
     end
   end
 end
+
+PODFILE_CONFIG_FILE_PATH = './podfile_config.json'
+
+options = {}
+parser = OptionParser.new do |opts|
+  opts.on('--podfile=PODFILE_PATH', '[Required] The path of Podfile')
+  opts.on('--method=METHOD_NAME', '[Required] The method to run')
+  opts.on('--json[=PATH]', '[Optional] The config json file path. Default is `./podfile_config.json`')
+  opts.on('--debug', '[Optional] The flag for debug')
+end
+parser.parse!(into: options)
+
+if not options[:method].nil? and not options[:podfile].nil? and File.exist? File.expand_path options[:podfile]
+
+  json_path = File.expand_path PODFILE_CONFIG_FILE_PATH
+  if not options[:json].nil?
+    json_path = File.expand_path options[:json]
+  end
+
+  if not File.exist? json_path
+    Log.e("json file not exists at `#{json_path}`", true)
+    return
+  end
+
+  begin
+    config_map = JSON.parse(IO.read json_path)
+  rescue JSON::ParserError
+    Log.e('json file\'s format is not correct', true)
+    return
+  end
+
+  if options[:method].eql? 'resource_copy'
+    PodfileTool.resource_copy options[:podfile], config_map, nil, options[:debug].nil? ? false : true
+  else
+    Log.e("unknown method: #{options[:method]}", true)
+  end
+
+else
+  puts parser.help
+end
+

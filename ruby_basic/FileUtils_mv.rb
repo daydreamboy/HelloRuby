@@ -1,8 +1,11 @@
 require 'fileutils'
+require 'pathname'
 
 src_path = './test/1.txt'
 dest_path = './test/test2/2.txt'
-src_path_copied = File.dirname(src_path) + File.basename(src_path) + '.copy'
+# Note: suppose src_path is a file path
+src_path_copied = src_path + '.copy'
+puts src_path_copied
 
 # Note: make folders for the dest_path
 FileUtils.mkdir_p File.dirname dest_path
