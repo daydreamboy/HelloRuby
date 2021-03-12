@@ -1374,7 +1374,7 @@ Ruby内置提供optparse库，该库中OptionParse类，用于解析CLI参数。
 CLI（Command Line Interface）定义命令行工具的参数协议，对于命令行参数分为下面两种
 
 * optional argument，可选参数（也可以配置为必选），多个可选参数和顺序无关，示例格式为`-h`或`--help`。
-* positionnal argument，固定参数（可以必选或可选），多个固定参数和顺序有关
+* positional argument，固定参数（可以必选或可选），多个固定参数和顺序有关
 
 说明
 
