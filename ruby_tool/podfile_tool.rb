@@ -331,6 +331,8 @@ class PodfileTool
 
           # Note: move the copied file to the dest file
           FileUtils.mv src_path_copied, dest_absolute_path
+        else
+          Log.e("destination path not exists: #{dest_absolute_path}", debug)
         end
       end
     end
