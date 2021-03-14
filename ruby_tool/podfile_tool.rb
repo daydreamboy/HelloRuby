@@ -5,16 +5,26 @@ require 'optparse'
 require 'json'
 require_relative './log_tool'
 
+##
+# A tool used in Podfile
+#
 class PodfileTool
   ##
   # change xcconfig files of the .xcodeproj which located in Podfile's folder
   #
-  # @param [String]  podfile_path Pass __FILE__ usually
-  # @param [String]  key the key which in xcconfig file, e.g. 'OTHER_LDFLAGS'
-  # @param [Array]  list_to_remove the values to remove for the key
-  # @param [Array]  list_to_add the values to remove for the key
-  # @param [Array]  target_list the xcconfig belong which target. If nil, will change xcconfig for all targets
-  # @param [Bool]  debug If true, to print debug log
+  # @param [String]  podfile_path
+  #        Pass __FILE__ usually
+  # @param [String]  config_map
+  #        The key which in xcconfig file. The supported keys are 'HEADER_SEARCH_PATHS', 'LIBRARY_SEARCH_PATHS', 'FRAMEWORK_SEARCH_PATHS',
+  #        'OTHER_LDFLAGS', 'OTHER_CFLAGS'
+  #        The value which is hash, and the keys are symbols:
+  #        HEADER_SEARCH_PATHS/LIBRARY_SEARCH_PATHS/FRAMEWORK_SEARCH_PATHS -> :path_to_add/:path_to_remove
+  #        OTHER_LDFLAGS -> :library_to_add/:library_to_remove/:framework_to_remove/:framework_to_add
+  #        OTHER_CFLAGS -> :flag_to_add/:flag_to_remove
+  # @param [Array]  target_list
+  #        The xcconfig belong which target. If nil, will change xcconfig for all targets
+  # @param [Bool]  debug
+  #        If true, to print debug log
   # @return [None]
   #
   # @example
@@ -139,7 +149,7 @@ class PodfileTool
     Log.v("Change after #{key}: #{config.attributes[key]}", debug)
   end
 
-  def self.change_framework_or_library_search_path!(config, key, change_map, degbug = false)
+  def self.change_framework_or_library_search_path!(config, key, change_map, debug = false)
     path_to_remove = change_map[:path_to_remove]
     path_to_add = change_map[:path_to_add]
 
@@ -236,12 +246,16 @@ class PodfileTool
   ##
   # Copy custom resource file or folder to Pods
   #
-  # @param [Object]  podfile_path The path of Podfile
-  # @param [Object]  copy_config_map The copy mapping. key is source path, value is destination path.
-  #                  The source/destination path is relative to the Podfile
-  # @param [Object]  config_json_path The json for copy_config_map. The `config_json_path` is prior to the `copy_config_map`
-  # @param [Object]  debug The flag for debugging
-  # @return [Object]
+  # @param [Object]  podfile_path
+  #        The path of Podfile
+  # @param [Object]  copy_config_map
+  #        The copy mapping. key is source path, value is destination path.
+  #        The source/destination path is relative to the Podfile
+  # @param [Object]  config_json_path
+  #        The json for copy_config_map. The `config_json_path` is prior to the `copy_config_map`
+  # @param [Object]  debug
+  #        The flag for debugging
+  # @return [Void]
   #
   # @example
   #
