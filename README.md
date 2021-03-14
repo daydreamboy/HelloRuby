@@ -1323,6 +1323,28 @@ Only at the end of a file, of course.
 File.rename './my-directory', './my-renamed-directory'
 ```
 
+* 获取绝对路径
+
+```ruby
+puts File.expand_path('.')
+```
+
+注意
+
+> `.`不代表当前脚本所在的目录，而是脚本执行所在目录
+>
+> 举个例子
+>
+> ```shell
+> $ ruby File_expand_path.rb
+> ~/GitHub_Projects/HelloRuby/ruby_basic
+> $ cd ..
+> $ ruby ruby_basic/File_expand_path.rb
+> ~/GitHub_Projects/HelloRuby
+> ```
+>
+> 
+
 
 
 ## 13、常用基础Module

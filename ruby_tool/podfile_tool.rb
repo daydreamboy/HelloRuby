@@ -246,14 +246,15 @@ class PodfileTool
   ##
   # Copy custom resource file or folder to Pods
   #
-  # @param [Object]  podfile_path
+  # @param [String]  podfile_path
   #        The path of Podfile
-  # @param [Object]  copy_config_map
+  # @param [Hash]  copy_config_map
   #        The copy mapping. key is source path, value is destination path.
   #        The source/destination path is relative to the Podfile
-  # @param [Object]  config_json_path
-  #        The json for copy_config_map. The `config_json_path` is prior to the `copy_config_map`
-  # @param [Object]  debug
+  # @param [String]  config_json_path
+  #        The json file path which relative to Podfile or absolute path.
+  #        The `config_json_path` is prior to the `copy_config_map`
+  # @param [Boolean]  debug
   #        The flag for debugging
   # @return [Void]
   #
@@ -272,13 +273,19 @@ class PodfileTool
     end
 
     podfile_dir = File.expand_path File.dirname(podfile_path)
+    config_json_path = Pathname.new(podfile_dir).join(config_json_path).to_s
 
-    if not config_json_path.nil? and File.exist? config_json_path
+    if not config_json_path.nil? and File.exist?(File.expand_path config_json_path)
       begin
         copy_config_map = JSON.parse IO.read config_json_path
       rescue Exception => e
         Log.e("an exception occurred: #{e}", debug)
       end
+    end
+
+    if copy_config_map.nil?
+      Log.e("copy_config_map is nil, #{config_json_path}", debug)
+      return
     end
 
     copy_config_map.each do |src_path, dest_path|
