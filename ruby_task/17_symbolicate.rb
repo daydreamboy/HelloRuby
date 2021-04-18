@@ -6,7 +6,7 @@ require 'optparse'
 
 def symbolicate(crash_report_path, dSYM_path = nil, output_path = nil, verbose = false, debug = false)
 
-  if not File.exist? crash_report_path or File.directory? crash_report_path
+  if crash_report_path.nil? or not File.exist? crash_report_path or File.directory? crash_report_path
     Log.e("crash report file not found!")
     return
   end
@@ -56,12 +56,13 @@ def symbolicate(crash_report_path, dSYM_path = nil, output_path = nil, verbose =
 
   if output_path.nil?
     timestamp = Time.now.to_s.gsub!(':', '_').gsub!(' ', '#')
-    output_path = File.join dir_path, timestamp
+    file_name = timestamp + '.log'
+    output_path = File.join dir_path, file_name
   end
 
   export_environment = 'export DEVELOPER_DIR="/Applications/Xcode.app/Contents/Developer"'
 
-  command_line = "#{export_environment};#{symbolicatecrash_path} #{crash_report_path} -d #{dSYM_path} > #{output_path}.log"
+  command_line = "#{export_environment};#{symbolicatecrash_path} #{crash_report_path} -d #{dSYM_path} > #{output_path}"
   if debug or verbose
     Log.v("#{command_line}")
   end
@@ -84,12 +85,20 @@ class CmdParser
       opts.separator "Examples:"
       opts.separator "ruby #{__FILE__ } PATH/TO/CRASH_FILE -v"
 
-      opts.on("-v", "--[no-]verbose", "Run verbosely") do |toggle|
-        self.cmd_options[:verbose] = toggle
+      opts.on("-v", "--[no-]verbose", "Run verbosely") do |value|
+        self.cmd_options[:verbose] = value
       end
 
-      opts.on("-d", "--[no-]debug", "Run in debug mode") do |toggle|
-        self.cmd_options[:debug] = toggle
+      opts.on("-d", "--[no-]debug", "Run in debug mode") do |value|
+        self.cmd_options[:debug] = value
+      end
+
+      opts.on("--dSYM=PATH", "The path of dSYM file") do |value|
+        self.cmd_options[:dSYM] = value
+      end
+
+      opts.on("-oPATH", "--output=PATH", "The path of output file. The file") do |value|
+        self.cmd_options[:output] = value
       end
     end
   end
@@ -98,18 +107,7 @@ class CmdParser
   def run
     self.cmd_parser.parse!
 
-    if ARGV.length != 1
-      puts self.cmd_parser.help
-      return
-    end
-
     file_path = ARGV[0]
-
-    if !File.exist?(file_path)
-      puts "[Error] #{file_path} is not a file!"
-      return
-    end
-
     file_path
   end
 end
@@ -117,7 +115,8 @@ end
 time = Benchmark.measure {
   parser = CmdParser.new
   file_path = parser.run
-  symbolicate(file_path, nil, nil, parser.cmd_options[:verbose], parser.cmd_options[:debug])
+
+  symbolicate(file_path, parser.cmd_options[:dSYM], parser.cmd_options[:output], parser.cmd_options[:verbose], parser.cmd_options[:debug])
 }
 
 puts "Completed with #{time.real} s.".magenta
