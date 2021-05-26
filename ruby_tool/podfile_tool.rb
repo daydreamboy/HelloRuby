@@ -346,8 +346,19 @@ class PodfileTool
     end
   end
 
-  def self.modify_pods_project_build_settings!(podfile_path, custom_build_settings, target_list = nil, debug = false)
+  def self.modify_pods_project_build_settings_from_installer!(installer, custom_build_settings, target_list = nil, debug = false)
     if custom_build_settings.length == 0
+      Log.w "custom build settings is empty"
+      return
+    end
+
+    pods_project = installer.pods_project
+    self.modify_pods_project_build_settings!(pods_project, custom_build_settings, target_list, debug)
+  end
+
+  def self.modify_pods_project_build_settings_from_podfile_path!(podfile_path, custom_build_settings, target_list = nil, debug = false)
+    if custom_build_settings.length == 0
+      Log.w "custom build settings is empty"
       return
     end
 
@@ -358,8 +369,15 @@ class PodfileTool
       return
     end
 
-    project = Xcodeproj::Project.open(project_path)
-    project.targets.each do |target|
+    pods_project = Xcodeproj::Project.open(project_path)
+    self.modify_pods_project_build_settings!(pods_project, custom_build_settings, target_list, debug)
+    pods_project.save(project_path)
+  end
+
+  ### Private Methods
+  #
+  def self.modify_pods_project_build_settings!(pods_project, custom_build_settings, target_list = nil, debug = false)
+    pods_project.targets.each do |target|
       # Note: skip the target in the target_list
       if Array(target_list).length > 0 && !target_list.include?(target.name)
         next
@@ -367,7 +385,6 @@ class PodfileTool
 
       Log.v("Change Target `#{target.name}`")
       target.build_configurations.each do |config|
-        # Log.d(build_settings, debug)
         custom_build_settings.each do |key, value|
           Log.v("configuration `#{config.name}` change build settings: #{key} = #{value}", debug)
           config.build_settings[key] = value
@@ -376,8 +393,8 @@ class PodfileTool
         Log.d(config.build_settings, debug)
       end
     end
-    project.save(project_path)
   end
+
 end
 
 
@@ -415,7 +432,7 @@ if File.basename($0) == File.basename(__FILE__)
     if options[:method].eql? 'resource_copy'
       PodfileTool.resource_copy options[:podfile], config_map, nil, options[:debug].nil? ? false : true
     elsif options[:method].eql? 'pods_project'
-      PodfileTool.modify_pods_project_build_settings! options[:podfile], config_map, nil, options[:debug].nil? ? false : true
+      PodfileTool.modify_pods_project_build_settings_from_podfile_path! options[:podfile], config_map, nil, options[:debug].nil? ? false : true
     else
       Log.e("unknown method: #{options[:method]}", true)
     end
