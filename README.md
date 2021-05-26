@@ -1930,7 +1930,7 @@ end
 
 ## 15、常用Ruby Tips
 
-### （1）Shell和Ruby脚本通信
+### (1) Shell和Ruby脚本通信
 
 ruby脚本通过shell执行，shell和ruby脚本可以进行交互。
 
@@ -1996,7 +1996,7 @@ echo "ruby_secret3 = $ruby_secret3"
 
 
 
-### （2）Ruby代码嵌入到Shell脚本中[^8]
+### (2) Ruby代码嵌入到Shell脚本中[^8]
 
 在Shell脚本中使用heredoc语法可以执行内嵌的Ruby代码，例如
 
@@ -2022,7 +2022,7 @@ EOF
 
 
 
-### （3）定义Interface类和Abstract类[^14]
+### (3) 定义Interface类和Abstract类[^14]
 
 ​       Java里面可以定义Interface和Abstract类，它们区别在于Interface不能有方法实现，而Abstract里面可以有默认方法实现。对于子类，子类可以实现Interface或者继承Abstract。
 
@@ -2178,7 +2178,7 @@ bike.change_gear(1) # AbstractInterface::InterfaceNotImplementedError: AcmeBicyc
 
 
 
-### （4）检查方法在源码中的位置
+### (4) 检查方法在源码中的位置
 
 ​       Ruby的Method类有source_location方法，通过传入symbol来获取特定方法实例，然后使用source_location方法来获取方法实例相关信息[^21][^22]。
 
@@ -2205,6 +2205,38 @@ end
 
 
 ### (5) 脚本模块化
+
+Python脚本的模块化示例，如下
+
+```python
+if __name__ == '__main__':
+    test__file__()
+
+
+
+Ruby脚本可以参考上面的示例，将脚本分为2个部分
+
+* 提供方法和类，给其他脚本使用
+* 自运行内容，比如单元测试、命令行工具等
+
+示例代码，如下
+
+```ruby
+def method
+  # methods provided for other scripts
+  ...
+end
+
+if File.basename($0) == File.basename(__FILE__)
+  # 1. test case
+  # 2. command line tool
+  ...
+end
+```
+
+说明
+
+> 上面if语句，用于判断脚本是否通过`ruby <current_file>.rb`执行的，还是被其他脚本引用执行的。如果当前脚本，被直接执行，则执行单元测试、命令行工具等
 
 
 
@@ -2259,7 +2291,7 @@ YARD支持的[tag列表](https://www.rubydoc.info/gems/yard/file/docs/Tags.md#Ta
 
 
 
-## 18、使用RVM（Ruby Version Manager）
+## 17、使用RVM（Ruby Version Manager）
 
 ### （1）安装RVM
 
