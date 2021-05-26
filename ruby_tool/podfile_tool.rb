@@ -3,6 +3,7 @@ require 'pathname'
 require 'fileutils'
 require 'optparse'
 require 'json'
+require 'xcodeproj'
 require_relative './log_tool'
 
 ##
@@ -344,45 +345,83 @@ class PodfileTool
       end
     end
   end
+
+  def self.modify_pods_project_build_settings!(podfile_path, custom_build_settings, target_list = nil, debug = false)
+    if custom_build_settings.length == 0
+      return
+    end
+
+    podfile_dir = File.expand_path File.dirname(podfile_path)
+    project_path = "#{podfile_dir}/Pods/Pods.xcodeproj"
+    if not File.exist? project_path
+      Log.e "#{podfile_dir}/Pods/Pods.xcodeproj not exists"
+      return
+    end
+
+    project = Xcodeproj::Project.open(project_path)
+    project.targets.each do |target|
+      # Note: skip the target in the target_list
+      if Array(target_list).length > 0 && !target_list.include?(target.name)
+        next
+      end
+
+      Log.v("Change Target `#{target.name}`")
+      target.build_configurations.each do |config|
+        # Log.d(build_settings, debug)
+        custom_build_settings.each do |key, value|
+          Log.v("configuration `#{config.name}` change build settings: #{key} = #{value}", debug)
+          config.build_settings[key] = value
+        end
+
+        Log.d(config.build_settings, debug)
+      end
+    end
+    project.save(project_path)
+  end
 end
 
-PODFILE_CONFIG_FILE_PATH = './podfile_config.json'
 
-options = {}
-parser = OptionParser.new do |opts|
-  opts.on('--podfile=PODFILE_PATH', '[Required] The path of Podfile')
-  opts.on('--method=METHOD_NAME', '[Required] The method to run')
-  opts.on('--json[=PATH]', '[Optional] The config json file path. Default is `./podfile_config.json`')
-  opts.on('--debug', '[Optional] The flag for debug')
-end
-parser.parse!(into: options)
+if File.basename($0) == File.basename(__FILE__)
+  PODFILE_CONFIG_FILE_PATH = './podfile_config.json'
 
-if not options[:method].nil? and not options[:podfile].nil? and File.exist? File.expand_path options[:podfile]
-
-  json_path = File.expand_path PODFILE_CONFIG_FILE_PATH
-  if not options[:json].nil?
-    json_path = File.expand_path options[:json]
+  options = {}
+  parser = OptionParser.new do |opts|
+    opts.on('--podfile=PODFILE_PATH', '[Required] The path of Podfile')
+    opts.on('--method=METHOD_NAME', '[Required] The method to run')
+    opts.on('--json[=PATH]', '[Optional] The config json file path. Default is `./podfile_config.json`')
+    opts.on('--debug', '[Optional] The flag for debug')
   end
+  parser.parse!(into: options)
 
-  if not File.exist? json_path
-    Log.e("json file not exists at `#{json_path}`", true)
-    return
-  end
+  if not options[:method].nil? and not options[:podfile].nil? and File.exist? File.expand_path options[:podfile]
 
-  begin
-    config_map = JSON.parse(IO.read json_path)
-  rescue JSON::ParserError
-    Log.e('json file\'s format is not correct', true)
-    return
-  end
+    json_path = File.expand_path PODFILE_CONFIG_FILE_PATH
+    if not options[:json].nil?
+      json_path = File.expand_path options[:json]
+    end
 
-  if options[:method].eql? 'resource_copy'
-    PodfileTool.resource_copy options[:podfile], config_map, nil, options[:debug].nil? ? false : true
+    if not File.exist? json_path
+      Log.e("json file not exists at `#{json_path}`", true)
+      return
+    end
+
+    begin
+      config_map = JSON.parse(IO.read json_path)
+    rescue JSON::ParserError
+      Log.e('json file\'s format is not correct', true)
+      return
+    end
+
+    if options[:method].eql? 'resource_copy'
+      PodfileTool.resource_copy options[:podfile], config_map, nil, options[:debug].nil? ? false : true
+    elsif options[:method].eql? 'pods_project'
+      PodfileTool.modify_pods_project_build_settings! options[:podfile], config_map, nil, options[:debug].nil? ? false : true
+    else
+      Log.e("unknown method: #{options[:method]}", true)
+    end
+
   else
-    Log.e("unknown method: #{options[:method]}", true)
+    puts parser.help
   end
-
-else
-  puts parser.help
 end
 

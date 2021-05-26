@@ -2204,6 +2204,12 @@ end
 
 
 
+### (5) 脚本模块化
+
+
+
+
+
 ## 16、RDoc语法
 
 [RDoc](https://ruby.github.io/rdoc/)是Ruby代码的注释生成文档的工具，包括rdoc和ri两个工具。这个[Cheatsheet](https://devhints.io/rdoc)提供RDoc支持注释形式。
@@ -2283,16 +2289,62 @@ $ source /Users/wesley_chen/.rvm/scripts/rvm
 
 ## 附录
 
-### 1、Ruby预定义变量[^1]
+### 1、Ruby关键词[^25]
 
-| 变量名 | 值类型 | 作用                                                    |
+| 关键词     | 值类型 | 作用                       |
+| ---------- | ------ | -------------------------- |
+| `__FILE__` | String | 该关键词所在文件的绝对路径 |
+
+
+
+### 2、Ruby预定义常量[^1]
+
+| 常量名 | 值类型 | 作用                                                    |
 | ------ | ------ | ------------------------------------------------------- |
 | ARGV   | Array  | 命令行参数（除ruby脚本文件名之外的参数），是`$*.`的别名 |
 | ENV    | Hash   | 当前shell的环境变量                                     |
+|        |        |                                                         |
 
 
 
-### 2、gem命令使用
+### 3、Ruby预定义变量[^24]
+
+| 变量名 | 值类型 | 作用                                                         |
+| ------ | ------ | ------------------------------------------------------------ |
+| `$0`   | String | 获取命令行中可执行文件的路径。当`$0`所在脚本，被其他脚本调用，`$0`总是命令行中可执行文件（不包括ruby命令） |
+
+
+
+#### $0示例
+
+predefined_global_variables.rb
+
+```ruby
+puts $0
+```
+
+predefined_global_variables_caller.rb
+
+```ruby
+require_relative '../predefined_global_variables'
+```
+
+
+
+命令行调用，如下
+
+```shell
+$ ruby predefined_global_variables_caller.rb 
+predefined_global_variables_caller.rb
+$ ruby ./predefined_global_variables_caller.rb
+./predefined_global_variables_caller.rb
+$ ruby predefined_global_variables_caller.rb
+predefined_global_variables_caller.rb
+```
+
+
+
+### 4、gem命令使用
 
 #### （1）常用命令
 
@@ -2434,6 +2486,9 @@ https://gems.ruby-china.com/
 [^22]:https://til-engineering.nulogy.com/Show-definition-of-a-method-at-runtime-in-Ruby/
 
 [^23]:https://dev.to/exampro/testunit-writing-test-code-in-ruby-part-1-of-3-44m2
+
+[^24]:https://ruby-doc.org/core-2.7.3/doc/globals_rdoc.html
+[^25]:https://ruby-doc.org/core-2.7.3/doc/keywords_rdoc.html
 
 
 
