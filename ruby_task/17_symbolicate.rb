@@ -39,11 +39,6 @@ def symbolicate(crash_report_path, dSYM_path = nil, output_path = nil, verbose =
     end
   end
 
-  if dSYM_path.nil?
-    Log.e('not found dSYM file', true)
-    return
-  end
-
   if symbolicatecrash_path.nil?
     find_paths = `find /Applications/Xcode.app -name symbolicatecrash -type f`
     symbolicatecrash_path = find_paths[0]
@@ -62,7 +57,7 @@ def symbolicate(crash_report_path, dSYM_path = nil, output_path = nil, verbose =
 
   export_environment = 'export DEVELOPER_DIR="/Applications/Xcode.app/Contents/Developer"'
 
-  command_line = "#{export_environment};#{symbolicatecrash_path} #{crash_report_path} -d #{dSYM_path} > #{output_path}"
+  command_line = dSYM_path.nil? ? "#{export_environment};#{symbolicatecrash_path} #{crash_report_path} > #{output_path}" : "#{export_environment};#{symbolicatecrash_path} #{crash_report_path} -d #{dSYM_path} > #{output_path}"
   if debug or verbose
     Log.v("#{command_line}")
   end
@@ -93,11 +88,11 @@ class CmdParser
         self.cmd_options[:debug] = value
       end
 
-      opts.on("--dSYM=PATH", "The path of dSYM file") do |value|
+      opts.on("--dSYM[=PATH]", "The path of dSYM file") do |value|
         self.cmd_options[:dSYM] = value
       end
 
-      opts.on("-oPATH", "--output=PATH", "The path of output file. The file") do |value|
+      opts.on("-o[PATH]", "--output[=PATH]", "The path of output file") do |value|
         self.cmd_options[:output] = value
       end
     end

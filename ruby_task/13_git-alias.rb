@@ -103,6 +103,10 @@ if options[:list]
   return
 end
 
+if subcommand.nil?
+  puts parser.help
+  return
+end
 
 time = Benchmark.measure {
   subcommands[subcommand].create_subcommand.order!
