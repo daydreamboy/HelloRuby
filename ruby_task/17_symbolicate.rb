@@ -57,7 +57,9 @@ def symbolicate(crash_report_path, dSYM_path = nil, output_path = nil, verbose =
 
   export_environment = 'export DEVELOPER_DIR="/Applications/Xcode.app/Contents/Developer"'
 
-  command_line = dSYM_path.nil? ? "#{export_environment};#{symbolicatecrash_path} #{crash_report_path} > #{output_path}" : "#{export_environment};#{symbolicatecrash_path} #{crash_report_path} -d #{dSYM_path} > #{output_path}"
+  verbose_flag = verbose ? " -v" : ""
+
+  command_line = dSYM_path.nil? ? "#{export_environment};#{symbolicatecrash_path}#{verbose_flag} #{crash_report_path} > #{output_path}" : "#{export_environment};#{symbolicatecrash_path}#{verbose_flag} #{crash_report_path} -d #{dSYM_path} > #{output_path}"
   if debug or verbose
     Log.v("#{command_line}")
   end

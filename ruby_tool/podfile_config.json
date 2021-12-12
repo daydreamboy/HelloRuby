@@ -1,0 +1,9 @@
+[
+  {
+    "target_name": "PodfileScript",
+    "build_settings": {
+      "APPLICATION_EXTENSION_API_ONLY": "NO",
+      "ENABLE_BITCODE":"NO"
+    }
+  }
+]
