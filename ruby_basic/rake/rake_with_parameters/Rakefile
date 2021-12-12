@@ -1,0 +1,16 @@
+# @example
+#
+# when using zsh
+# $ rake "name[john,doe]"
+# $ rake "name[billy bob, smith]"
+#
+# when using bash
+# $ rake name[john,doe]
+# $ rake "name[billy bob, smith]"
+#
+
+task :name, [:first_name, :last_name] do |t, args|
+  puts args
+  puts "First name is #{args.first_name}"
+  puts "Last name is #{args.last_name}"
+end

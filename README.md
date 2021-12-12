@@ -2317,6 +2317,285 @@ $ source /Users/wesley_chen/.rvm/scripts/rvm
 
 ## 18、使用Rakefile
 
+Rake是一个用Ruby实现的Make-like程序，用于Ruby语法来描述任务和依赖关系。
+
+官方文档对Rake的描述[^26]，如下
+
+> Rake is a Make-like program implemented in Ruby. Tasks and dependencies are specified in standard Ruby syntax.
+
+而Rakefile是rake版本的Makefile文件。
+
+
+
+### (1) 安装rake
+
+```shell
+$ gem install rake
+```
+
+说明
+
+> 使用rake --help，查看帮助信息
+
+
+
+### (2) HelloWorld版的Rakefile
+
+已经有rake命令后，可以创建一个Rakefile，如下
+
+```ruby
+task default: %w[test]
+
+task :test do
+  ruby "unit_test.rb"
+end
+```
+
+上面的Rakefile有2个任务
+
+* test任务，用于执行unit_test.rb
+* default任务，它本身不执行任何事情，它依赖一个任务，即test任务
+
+说明
+
+> %w[test]的写法，和["test"]是等价的，是一个字符串数组
+
+
+
+### (3) Rakefile语法
+
+官方文档[^27]中，提到Rakefile文件允许任何ruby代码，Rakefile中主要有task和action两个概念。
+
+说明
+
+> 如何要学习Rakefile语法，可以参考这篇[文档](https://ruby.github.io/rake/doc/rakefile_rdoc.html)
+
+
+
+#### a. Task
+
+task是Rakefile中主要的工作单元，它有一个名字（通常是符号或者字符串），一个前提条件列表，以及一个action（通常是block形式）的列表。
+
+官方文档描述，如下
+
+> Tasks are the main unit of work in a Rakefile. Tasks have a name (usually given as a symbol or a string), a list of prerequisites (more symbols or strings) and a list of actions (given as a block).
+
+
+
+##### 简单的task
+
+task是一个内置方法，它带一个参数（task的名字），举个例子，如下
+
+```ruby
+task :name
+```
+
+
+
+##### 带前提条件的task
+
+前提条件是执行该task之前需要执行的事情。它是一个数组形式。举个例子，如下
+
+```ruby
+task name: [:prereq1, :prereq2]
+```
+
+实际上，task接收一个key/value参数。它等价于下面的代码
+
+```ruby
+hash = Hash.new
+hash[:name] = [:prereq1, :prereq2]
+task(hash)
+```
+
+下面几种写法，和上面是一样的，如下
+
+```ruby
+task 'name' => %w[prereq1 prereq2]
+task name: %w[prereq1 prereq2]
+```
+
+
+
+##### 带action的task
+
+带action的task，实际是有一个block参数。举个例子，如下
+
+```ruby
+task name: [:prereq1, :prereq2] do |t|
+  # actions (may reference t)
+end
+```
+
+说明
+
+> task支持多个定义，每次新的定义，把新的前提条件或者action添加到现有的task上。和上面等价的写法，如下
+>
+> ```ruby
+> task :name
+> task name: :prereq1
+> task name: %w[prereq2]
+> task :name do |t|
+>   # actions
+> end
+> ```
+>
+> 
+
+
+
+#### b. File Task
+
+File task是专门为创建文件而设计的。当一个文件的创建依赖其他文件创建时，使用File task是合适的。File task采用file方法，而不是task方法，而且一般使用字符串作为file task的名字。
+
+举个例子，如下
+
+```ruby
+file "prog" => ["a.o", "b.o"] do |t|
+  sh "cc -o #{t.name} #{t.prerequisites.join(' ')}"
+end
+```
+
+上面prog可执行文件的创建，依赖2个文件a.o和b.o，如果它们都存在，则执行action。
+
+
+
+#### c. Directory Task
+
+Directory task实际也是一种file task，是一个便利方法，用于创建文件夹。
+
+举个例子，如下
+
+```ruby
+directory "testdata/examples/doc"
+```
+
+上面等价于
+
+```ruby
+file "testdata" do |t| mkdir t.name end
+file "testdata/examples" => ["testdata"] do |t| mkdir t.name end
+file "testdata/examples/doc" => ["testdata/examples"] do |t| mkdir t.name end
+```
+
+对于Directory task，有个缺点：它不支持前提条件和action。但是可以为它添加前提条件和action。举个例子，如下
+
+```ruby
+directory "testdata"
+file "testdata" => ["otherdata"]
+file "testdata" do
+  cp Dir["standard_data/*.data"], "testdata"
+end
+```
+
+
+
+#### d. 带并行前提条件的task
+
+使用multitask方法，可以支持并行执行前提条件。举个例子，如下
+
+```ruby
+multitask copy_files: %w[copy_src copy_doc copy_bin] do
+  puts "All Copies Complete"
+end
+```
+
+上面三个前提任务：copy_src、copy_doc和copy_bin，都是并行执行的，每个任务在单独Ruby线程中执行。
+
+说明
+
+> rake提供的内置数据结构都是线程安全的，但是用户在多个并行任务中，共享数据需要考虑线程安全。
+
+
+
+### (4) rake命令传参
+
+rake命令的格式，如下
+
+```shell
+$ rake --help
+rake [-f rakefile] {options} targets...
+```
+
+targets是这里主要介绍的内容。
+
+假设Rakefile的内容，如下
+
+```ruby
+task :name, [:first_name, :last_name] do |t, args|
+  puts args
+  puts "First name is #{args.first_name}"
+  puts "Last name is #{args.last_name}"
+end
+```
+
+可以对rake命令传参，用于执行特定的task以及它的参数。
+
+举个例子（在bash环境中），如下
+
+```shell
+$ rake name[john,doe]
+```
+
+说明
+
+> 在zsh中，需要特殊处理`[]`，可以使用双引号，或者使用转义符号。如下
+>
+> ```shell
+> $ rake "name[john,doe]"
+> $ rake name\[john,doe\]
+> ```
+>
+> 如果参数中有空格，则在bash还是zsh中，都需要双引号，如下
+>
+> ```shell
+> $ rake "name[billy bob, smith]"
+> ```
+>
+> 
+
+
+
+#### a. 设置默认参数
+
+使用with_defaults方法，可以为每个任务设置默认参数。举个例子，如下
+
+```ruby
+task :name, [:first_name, :last_name] do |t, args|
+  args.with_defaults(:first_name => "John", :last_name => "Dough")
+  puts "First name is #{args.first_name}"
+  puts "Last  name is #{args.last_name}"
+end
+```
+
+调用rake命令的例子，如下
+
+```shell
+$ rake "name"
+$ rake "name[1]"
+$ rake "name[1,2]"
+```
+
+
+
+#### b. 设置默认参数并有前提条件
+
+举个例子，如下
+
+```ruby
+task :name, [:first_name, :last_name] => [:pre_name] do |t, args|
+  args.with_defaults(:first_name => "John", :last_name => "Dough")
+  puts "First name is #{args.first_name}"
+  puts "Last  name is #{args.last_name}"
+end
+```
+
+
+
+#### c. 参数可变的task
+
+TODO：https://ruby.github.io/rake/doc/rakefile_rdoc.html#label-Tasks+that+take+Variable-length+Parameters
+
 
 
 
@@ -2524,9 +2803,9 @@ https://gems.ruby-china.com/
 [^24]:https://ruby-doc.org/core-2.7.3/doc/globals_rdoc.html
 [^25]:https://ruby-doc.org/core-2.7.3/doc/keywords_rdoc.html
 
+[^26]:https://ruby.github.io/rake/
 
-
-
+[^27]:https://ruby.github.io/rake/doc/rakefile_rdoc.html
 
 
 
