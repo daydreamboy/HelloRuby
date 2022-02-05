@@ -2351,6 +2351,8 @@ task :test do
 end
 ```
 
+> 示例代码，见hello_world
+
 上面的Rakefile有2个任务
 
 * test任务，用于执行unit_test.rb
@@ -2457,6 +2459,8 @@ end
 ```
 
 上面prog可执行文件的创建，依赖2个文件a.o和b.o，如果它们都存在，则执行action。
+
+这里t.name指的File task的名字，而t.prerequisites是数组，表示File task依赖的文件，即a.o和b.o
 
 
 
@@ -2575,6 +2579,8 @@ $ rake "name"
 $ rake "name[1]"
 $ rake "name[1,2]"
 ```
+
+> 示例代码，见rake_with_default_parameters
 
 
 
