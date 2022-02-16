@@ -10,7 +10,8 @@ require 'open3'
 require 'colored2'
 require 'benchmark'
 
-#require_relative '../ruby_tool/ruby_tools'
+# require_relative '../ruby_tool/ruby_tools'
+require_relative '../ruby_tool/ext_numeric'
 
 $default_exclude_list = %w(
 c
@@ -152,4 +153,4 @@ time = Benchmark.measure {
   NmUtility.new.run
 }
 
-puts "Completed with #{time.real} s.".magenta
+puts "Completed with #{time.real.duration}.".magenta
