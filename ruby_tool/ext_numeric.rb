@@ -1,11 +1,13 @@
 
-##
-# `duration` method
-# create a duration method for Numeric instance
-#
-# @see https://stackoverflow.com/a/1679963
-#
+
 class Numeric
+  ##
+  # `duration` method
+  #
+  # @return the pretty formatted string
+  #
+  # @see https://stackoverflow.com/a/1679963
+  #
   def duration
     # Note: display days/hours/minutes as integer, and display seconds as its original type
     secs  = self
