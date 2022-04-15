@@ -346,6 +346,27 @@ class PodfileTool
     end
   end
 
+  ##
+  # Modify pods project
+  #
+  # @param [Object]  installer
+  #        The path of Podfile
+  # @param [Hash]  custom_build_settings
+  #        The key and value pairs are defined in Xcode Build Setting
+  # @param [String]  target_list
+  #        The target list. Set nil for all targets
+  # @param [Boolean]  debug
+  #        The flag for debugging
+  # @return [Void]
+  #
+  # @example
+  #
+  # post_install do |installer|
+  #   PodfileTool.modify_pods_project_build_settings_from_installer!(installer, {
+  #     'APPLICATION_EXTENSION_API_ONLY' => 'NO',
+  #   }, ['PodfileScript'], false)
+  # end
+  #
   def self.modify_pods_project_build_settings_from_installer!(installer, custom_build_settings, target_list = nil, debug = false)
     if custom_build_settings.length == 0
       Log.w "custom build settings is empty"

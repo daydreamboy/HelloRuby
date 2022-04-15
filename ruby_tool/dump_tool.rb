@@ -49,8 +49,21 @@ end
 ##
 # Dump info of method symbol
 #
-# Note: https://til-engineering.nulogy.com/Show-definition-of-a-method-at-runtime-in-Ruby/
-# Note: https://stackoverflow.com/a/3393706
+# @param [String]  method_symbol
+#        the method symbol, e.g. :pod
+# @param [Class]  clz
+#        the Class name. Default is nil
+# @param [Bool]  is_class_method
+#        the flag which indicates the method if a class method. Default is false
+#
+# @see https://til-engineering.nulogy.com/Show-definition-of-a-method-at-runtime-in-Ruby/
+# @see https://stackoverflow.com/a/3393706
+#
+# @example
+#
+# dump_method(:pod)
+# dump_method(:post_install)
+#
 def dump_method(method_symbol, clz = nil, is_class_method = false)
   if clz.nil?
     method_variable = method(method_symbol)
