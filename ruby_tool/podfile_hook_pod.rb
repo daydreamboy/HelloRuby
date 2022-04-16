@@ -13,10 +13,10 @@ module Pod
         # dump_object(*args)
 
         pod_name = args[0]
-        pod_arg_map = args.length > 2 ? args[1] : nil
+        pod_arg_hash = args[1] if args.length > 2
 
-        # dump_object(pod_name)
-        # dump_object(pod_arg_map)
+        dump_object(pod_name)
+        dump_object(pod_arg_hash)
 
         dump_object(current_target_definition.name)
 

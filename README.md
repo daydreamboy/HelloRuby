@@ -612,9 +612,72 @@ my_map方法，实际上接收两个参数，一个参数是数组，另一个�
 
 
 
-#### c. TODO
+#### c. 显式block参数
 
-block_5_method_with_explicit_block.rb
+在上面提到yield和block_given?方式，适用于每个方法的隐含的block参数，而且这个block参数必须是方法的最后一个参数。
+
+除了这种传block参数外，还存在显式block参数，也称为**&参数** (ampersand parameter)[^28]
+
+举个例子，如下
+
+```ruby
+def a_method(&block)
+  dump_object(block)
+  block.call()
+end
+```
+
+上面&block是一个&参数，block变量名可以是其他命名。block是Proc对象，调用它的call方法，让block执行。
+
+如果要调用a_method方法，正常传入一个block块即可，如下
+
+```ruby
+a_method { puts "x" } # => #<Proc:...>
+```
+
+&参数支持block、Proc以及lambda对象
+
+举个例子，如下
+
+```ruby
+# Case 1:
+a_method { puts "x" } # => #<Proc:...>
+
+# Case 2:
+a_proc = Proc.new { "x" }
+a_method(&a_proc) # => #<Proc:...>
+# a_method(a_proc) # Runtime: ArgumentError
+
+# Case 3:
+a_lambda = -> () { "x" } # => #<Proc:... (lambda)>
+a_method(&a_lambda) # => #<Proc:... (lambda)>
+```
+
+
+
+如果block有多个参数，调用call方法，传入对应个数和类型的参数即可。举个例子[^29]，如下
+
+```ruby
+def a_method_block_with_arguments(&block)
+  dump_object(block)
+  block.call('Hello', 'World') if block
+end
+
+# Case 4: pass a block
+a_method_block_with_arguments do |arg1, arg2|
+  puts "arg1 = #{arg1}"
+  puts "arg2 = #{arg2}"
+end
+
+# Case 5: pass a nil as block
+a_method_block_with_arguments
+```
+
+对于block调用，注意block有可能是nil，需要进行保护下
+
+>  示例代码，见block_5_method_with_explicit_block.rb
+
+
 
 
 
@@ -2818,6 +2881,9 @@ https://gems.ruby-china.com/
 [^26]:https://ruby.github.io/rake/
 
 [^27]:https://ruby.github.io/rake/doc/rakefile_rdoc.html
+
+[^28]:https://mixandgo.com/learn/ruby/blocks
+[^29]:https://stackoverflow.com/a/3066747
 
 
 
