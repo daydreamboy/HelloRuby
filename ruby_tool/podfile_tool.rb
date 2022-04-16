@@ -4,6 +4,7 @@ require 'fileutils'
 require 'optparse'
 require 'json'
 require 'xcodeproj'
+require_relative './podfile_hook_pod'
 require_relative './log_tool'
 
 ##
@@ -11,7 +12,7 @@ require_relative './log_tool'
 #
 class PodfileTool
   ##
-  # change xcconfig files of the .xcodeproj which located in Podfile's folder
+  # [Public] change xcconfig files of the .xcodeproj which located in Podfile's folder
   #
   # @param [String]  podfile_path
   #        Pass __FILE__ usually
@@ -245,7 +246,7 @@ class PodfileTool
   end
 
   ##
-  # Copy custom resource file or folder to Pods
+  # [Public] Copy custom resource file or folder to Pods
   #
   # @param [String]  podfile_path
   #        The path of Podfile
@@ -347,7 +348,7 @@ class PodfileTool
   end
 
   ##
-  # Modify pods project
+  # [Public] Modify pods project
   #
   # @param [Object]  installer
   #        The path of Podfile
@@ -393,6 +394,40 @@ class PodfileTool
     pods_project = Xcodeproj::Project.open(project_path)
     self.modify_pods_project_build_settings!(pods_project, custom_build_settings, target_list, debug)
     pods_project.save(project_path)
+  end
+
+  ##
+  # [Public] Do a hook for the pod method
+  #
+  # @param [String]  development_pods_config_file
+  #        The custom path for development_pods.json. Specify nil, use default json file which is development_pods.json
+  #        alongside with Podfile
+  # @param [Boolean]  debug
+  #        The debug flag. Default is false
+  # @return [Void]
+  #
+  # @note This method will change pod 'A', ... to  pod 'A', :path => 'path/to/A.podspec'
+  #
+  # @example
+  #
+  # PodfileTool.do_pod_hook
+  # PodfileTool.do_pod_hook('custom_path.json')
+  # PodfileTool.do_pod_hook(nil, true)
+  #
+  def self.do_pod_hook(development_pods_config_file = nil, debug = false)
+    development_pods_config_file = development_pods_config_file || "development_pods.json"
+    if File.exists?(development_pods_config_file) then
+      development_pods = JSON.parse(IO.read development_pods_config_file)
+    end
+
+    PodfileHook.debug_flag = debug
+    PodfileHook.register_pod_hook do |target_name, pod_name, pod_arg_hash|
+      path = development_pods[pod_name]
+      if path then
+        pod_arg_hash[:path] = path
+      end
+      false
+    end
   end
 
   ### Private Methods

@@ -38,3 +38,18 @@ end
 
 # Case 5: pass a nil as block
 a_method_block_with_arguments
+
+# Case 6: pass a hash container get key/value
+def a_method_block_with_arguments2(&block)
+  some_hash = {}
+  status = block.call('Hello', some_hash) if block
+  dump_object(some_hash)
+  dump_object(status)
+end
+
+a_method_block_with_arguments2 do |arg1, some_hash|
+  puts "arg1 = #{arg1}"
+  puts "arg2 = #{some_hash}"
+  some_hash["key"] = "value"
+  true
+end
