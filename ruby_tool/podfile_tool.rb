@@ -4,7 +4,7 @@ require 'fileutils'
 require 'optparse'
 require 'json'
 require 'xcodeproj'
-require_relative './podfile_hook_pod'
+require_relative './podfile_hook_dependency'
 require_relative './log_tool'
 
 ##
@@ -415,13 +415,15 @@ class PodfileTool
   # PodfileTool.do_pod_hook(nil, true)
   #
   def self.do_pod_hook(development_pods_config_file = nil, debug = false)
+    require_relative './podfile_hook_pod'
+
     development_pods_config_file = development_pods_config_file || "development_pods.json"
     if File.exists?(development_pods_config_file) then
       development_pods = JSON.parse(IO.read development_pods_config_file)
     end
 
-    PodfileHook.debug_flag = debug
-    PodfileHook.register_pod_hook do |target_name, pod_name, pod_arg_hash|
+    PodfilePodHook.debug_flag = debug
+    PodfilePodHook.register_pod_hook do |target_name, pod_name, pod_arg_hash|
       path = development_pods[pod_name]
       if path then
         pod_arg_hash[:path] = path

@@ -2,7 +2,7 @@
 
 require_relative 'dump_tool'
 
-class PodfileHook
+class PodfilePodHook
   @@pod_hook_plugins = []
   @@debug_flag = false
 
@@ -43,8 +43,12 @@ module Pod
       # hook pod
       alias original_pod pod
 
+      # Note: args of pod method, there're 3 cases
+      # case 1: pod 'xxx'. So args are <pod_name>
+      # case 2: pod 'xxx', 'version'. So args are <pod_name>, <version>
+      # case 3: pod 'xxx', :path => 'yyy'/:git => 'zzz'/... So args are <pod_name>, <hash>
       def pod(*args)
-        dump_object(args)
+        # dump_object(args)
         pod_name = args[0]
         pod_arg_hash = {}
 
@@ -56,7 +60,7 @@ module Pod
 
         should_ignore_pod = false
         target_name = current_target_definition.name if current_target_definition
-        PodfileHook.pod_hook_plugins.each do |plugin|
+        PodfilePodHook.pod_hook_plugins.each do |plugin|
           should_ignore_pod = plugin.call(target_name, pod_name, pod_arg_hash)
         end
 
@@ -76,13 +80,13 @@ module Pod
           end
 
           if pod_rest_args.is_a? String or pod_rest_args.is_a? Hash
-            Log.d("[pod_hook] install #{pod_name} for target #{target_name}, with #{pod_rest_args}", PodfileHook.debug_flag)
+            Log.d("[pod_hook] install #{pod_name} for target #{target_name}, with #{pod_rest_args}", PodfilePodHook.debug_flag)
             original_pod pod_name, pod_rest_args
           else
-            Log.e("[pod_hook] unknown pod args type: #{pod_rest_args} in #{pod_name} #{target_name}", PodfileHook.debug_flag)
+            Log.e("[pod_hook] unknown pod args type: #{pod_rest_args} in #{pod_name} #{target_name}", PodfilePodHook.debug_flag)
           end
         else
-          Log.d("Skip pod #{pod_name}", PodfileHook.debug_flag)
+          Log.d("Skip pod #{pod_name}", PodfilePodHook.debug_flag)
         end
       end
     end

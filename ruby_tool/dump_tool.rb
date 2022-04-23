@@ -63,6 +63,8 @@ end
 #
 # dump_method(:pod)
 # dump_method(:post_install)
+# dump_method(:dependency, s.class, false)
+# dump_method(:dependency, Pod::Spec, false)
 #
 def dump_method(method_symbol, clz = nil, is_class_method = false)
   if clz.nil?
@@ -76,8 +78,30 @@ def dump_method(method_symbol, clz = nil, is_class_method = false)
   end
 
   if not method_variable.nil?
-    puts "[Debug] `#{method_symbol}` at #{method_variable.source_location.join(':')} (original_name = `#{method_variable.original_name}`)"
+    puts "[Debug] `#{method_symbol}` at #{method_variable.source_location ? method_variable.source_location.join(':') : 'unknown source location'} (original_name = `#{method_variable.original_name}`)"
   else
     puts "[Debug] not find `#{method_symbol}` method!"
   end
+end
+
+##
+# Dump call stack when call this method
+#
+# @see https://stackoverflow.com/questions/11122233/get-current-stack-trace-in-ruby-without-raising-an-exception
+#
+def dump_call_stack
+  puts "[Debug] callStack start---"
+  puts caller
+  puts "[Debug] callStack end---"
+end
+
+##
+# Dump method list of the object or class
+#
+# @param [Object|Class] the object or class
+#
+# @see https://stackoverflow.com/questions/10283257/print-all-method-names-of-a-class-in-ruby
+#
+def dump_method_list(objectOrClass)
+  puts "[Debug] method list (#{objectOrClass.class}) #{objectOrClass.inspect} = #{(objectOrClass.methods - Object.methods - Class.methods).sort.to_s}"
 end
