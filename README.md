@@ -1003,6 +1003,28 @@ Klass.send :Hello, 'gentle2', 'readers2'
 
 
 
+#### then方法
+
+then方法和yield_self方法是同一个方法，它的作用是提供链式调用。它们的签名，如下
+
+```ruby
+then {|x| block } → an_object
+yield_self {|x| block } → an_object
+```
+
+这2个方法，都仅有一个参数，而且这个参数是调用者本身。这样设计保证可以链式多次调用这个方法。
+
+举个例子，如下
+
+```ruby
+output = "my string".then { |s| s.upcase }.then { |s| s.capitalize }
+puts output
+```
+
+> 示例代码，见Object_method_then.rb
+
+
+
 
 
 ### (4) Module
