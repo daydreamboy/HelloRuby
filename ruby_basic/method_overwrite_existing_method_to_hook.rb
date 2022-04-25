@@ -1,0 +1,1 @@
+require './method_overwrite_existing_method_hook_provider'

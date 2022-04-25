@@ -7,18 +7,7 @@ class PodfileDependencyHook
   @@debug_flag = false
 
   ##
-  # [Public] Register a hook plugin for the pod method
-  #
-  # @param [Block]  &block
-  #        - target_name [String] the target name when pod method inside
-  #        - pod_name [String] the pod name for pod method's first parameter
-  #        - pod_arg_hash [Hash] the rest for pod method's second parameter.
-  #          Change pod_arg_hash to modify pod method's second parameter and use
-  #          :version to set a new version
-  #
-  # @return [Void]
-  #
-  # @note This method will change pod 'A', ... to  pod 'A', :path => 'path/to/A.podspec'
+  # [Public] Register a hook plugin for the dependency method
   #
   def self.register_pod_hook(&block)
     @@pod_hook_plugins.push(block) if block
@@ -35,6 +24,13 @@ class PodfileDependencyHook
   def self.debug_flag
     @@debug_flag
   end
+
+  def self.do_dependency_hook(dependency_config_file = nil, debug = false)
+    PodfileDependencyHook.debug_flag = debug
+    PodfileDependencyHook.register_pod_hook do |pod_name, dependency_pod_name, pod_arg_hash|
+      false
+    end
+  end
 end
 
 
@@ -46,27 +42,23 @@ module Pod
       alias original_dependency dependency
 
       def dependency(*args)
-        dump_object(args)
-        dump_object(self)
-        dump_object(self.name)
-        dump_object(self.version)
-
-        dump_method(:original_dependency)
-        dump_call_stack
+        dependency_pod_name = args[0]
 
         dependency_arg_hash = {}
-        dependency_arg_hash[:name] = self.name
+        dependency_arg_hash[:name_of_pod] = self.name
+        dependency_arg_hash[:name_of_dependency] = dependency_pod_name
         dependency_arg_hash[:version] = self.version
 
         should_ignore_dependency = false
         PodfileDependencyHook.pod_hook_plugins.each do |plugin|
-          should_ignore_dependency = plugin.call(self.name, pod_name, dependency_arg_hash)
+          should_ignore_dependency = plugin.call(self.name, dependency_pod_name, dependency_arg_hash)
         end
 
         if not should_ignore_dependency
+          Log.d("[pod_dependency] install #{dependency_pod_name} for pod #{self.name} with #{args}", PodfileDependencyHook.debug_flag)
           original_dependency *args
         else
-
+          Log.d("Skip dependency #{dependency_pod_name}", PodfileDependencyHook.debug_flag)
         end
       end
     end

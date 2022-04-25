@@ -396,40 +396,14 @@ class PodfileTool
     pods_project.save(project_path)
   end
 
-  ##
-  # [Public] Do a hook for the pod method
-  #
-  # @param [String]  development_pods_config_file
-  #        The custom path for development_pods.json. Specify nil, use default json file which is development_pods.json
-  #        alongside with Podfile
-  # @param [Boolean]  debug
-  #        The debug flag. Default is false
-  # @return [Void]
-  #
-  # @note This method will change pod 'A', ... to  pod 'A', :path => 'path/to/A.podspec'
-  #
-  # @example
-  #
-  # PodfileTool.do_pod_hook
-  # PodfileTool.do_pod_hook('custom_path.json')
-  # PodfileTool.do_pod_hook(nil, true)
-  #
   def self.do_pod_hook(development_pods_config_file = nil, debug = false)
     require_relative './podfile_hook_pod'
+    PodfilePodHook.do_pod_hook(development_pods_config_file, debug)
+  end
 
-    development_pods_config_file = development_pods_config_file || "development_pods.json"
-    if File.exists?(development_pods_config_file) then
-      development_pods = JSON.parse(IO.read development_pods_config_file)
-    end
-
-    PodfilePodHook.debug_flag = debug
-    PodfilePodHook.register_pod_hook do |target_name, pod_name, pod_arg_hash|
-      path = development_pods[pod_name]
-      if path then
-        pod_arg_hash[:path] = path
-      end
-      false
-    end
+  def self.do_dependency_hook(dependency_config_file = nil, debug = false)
+    require_relative './podfile_hook_dependency'
+    PodfileDependencyHook.do_dependency_hook(dependency_config_file, debug)
   end
 
   ### Private Methods
