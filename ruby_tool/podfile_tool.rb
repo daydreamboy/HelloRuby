@@ -4,8 +4,8 @@ require 'fileutils'
 require 'optparse'
 require 'json'
 require 'xcodeproj'
-require_relative './podfile_hook_dependency'
 require_relative './log_tool'
+require_relative './require_tool'
 
 ##
 # A tool used in Podfile
@@ -397,13 +397,15 @@ class PodfileTool
   end
 
   def self.do_pod_hook(development_pods_config_file = nil, debug = false)
-    require_relative './podfile_hook_pod'
-    PodfilePodHook.do_pod_hook(development_pods_config_file, debug)
+    if RequireTool.require_relative_if_needed './podfile_hook_pod'
+      PodfilePodHook.do_pod_hook(development_pods_config_file, debug)
+    end
   end
 
   def self.do_dependency_hook(dependency_config_file = nil, debug = false)
-    require_relative './podfile_hook_dependency'
-    PodfileDependencyHook.do_dependency_hook(dependency_config_file, debug)
+    if RequireTool.require_relative_if_needed './podfile_hook_dependency'
+      PodfileDependencyHook.do_dependency_hook(dependency_config_file, debug)
+    end
   end
 
   ### Private Methods
