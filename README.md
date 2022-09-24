@@ -1964,7 +1964,7 @@ puts Pathname.new('/Users/wesley_chen/6/iOS/Pods/FDFullscreenPopGesture').relati
 
 
 
-#### (4) TestUnit[^23]
+### (4) TestUnit[^23]
 
 TestUnit是Ruby的标准库，它提供基本的单元测试能力。
 
@@ -2013,7 +2013,60 @@ class HelloTest < Test::Unit::TestCase
 end
 ```
 
-示例代码，见TestUnit_TestCase.rb
+> 示例代码，见TestUnit_TestCase.rb
+
+
+
+### (5) dotenv
+
+dotenv是三方库，它的GitHub地址是https://github.com/bkeepers/dotenv
+
+dotenv的常见作用是，自定义`.env`文件，这个文件可以存放key=value键值对。
+
+当执行下面的代码
+
+```ruby
+require 'dotenv'
+Dotenv.load
+```
+
+可以将rb当前同级的`.env`文件，加载内容到ENV这个环境变量中[^30]。
+
+举个例子，如下
+
+`.env`文件内容，如下
+
+```properties
+# This is a comment
+SECRET_KEY=YOURSECRETKEYGOESHERE # comment
+SECRET_HASH="something-with-a-#-hash"
+```
+
+ruby文件，如下
+
+```ruby
+#!/usr/bin/ruby
+#
+
+require 'dotenv'
+Dotenv.load
+
+def test_env_load
+  puts ENV['SECRET_KEY']
+  puts ENV['SECRET_HASH']
+
+  puts "---------"
+  ENV.each_pair do |name, value|
+    puts "#{name} = #{value}"
+  end
+end
+
+test_env_load
+```
+
+> 示例代码，见dotenv_load.rb
+
+
 
 
 
@@ -2906,6 +2959,8 @@ https://gems.ruby-china.com/
 
 [^28]:https://mixandgo.com/learn/ruby/blocks
 [^29]:https://stackoverflow.com/a/3066747
+
+[^30]:https://stackoverflow.com/questions/34535555/loading-env-in-ruby-on-rails-application
 
 
 
