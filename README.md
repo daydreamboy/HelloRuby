@@ -2078,6 +2078,10 @@ test_env_load
 
 
 
+### (6) gem
+
+TODO: RubyGem
+
 
 
 
@@ -2360,11 +2364,12 @@ end
 
 ### (5) 脚本模块化
 
-Python脚本的模块化示例，如下
+参考Python脚本的模块化示例，如下
 
 ```python
 if __name__ == '__main__':
     test__file__()
+```
 
 
 
@@ -2388,9 +2393,23 @@ if File.basename($0) == File.basename(__FILE__)
 end
 ```
 
+
+
 说明
 
 > 上面if语句，用于判断脚本是否通过`ruby <current_file>.rb`执行的，还是被其他脚本引用执行的。如果当前脚本，被直接执行，则执行单元测试、命令行工具等
+
+
+
+### (6) 比较版本号字符串
+
+Ruby的gem库，提供Version类，可以用于比较版本号字符串。
+
+举个例子[^31]，如下
+
+```ruby
+Gem::Version.new('0.4.1') > Gem::Version.new('0.10.1')
+```
 
 
 
@@ -2971,6 +2990,8 @@ https://gems.ruby-china.com/
 [^29]:https://stackoverflow.com/a/3066747
 
 [^30]:https://stackoverflow.com/questions/34535555/loading-env-in-ruby-on-rails-application
+
+[^31]:https://stackoverflow.com/a/3064161
 
 
 
