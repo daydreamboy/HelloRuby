@@ -329,6 +329,16 @@ end
 
 
 
+### (2) 添加方法
+
+TODO: https://stackoverflow.com/questions/34528649/ruby-add-method-to-a-class
+
+http://rubyblog.pro/2017/04/class-methods-and-instance-methods-by-including-one-module
+
+
+
+
+
 ## 5、Calling Methods
 
 ### (1) 方法的传参方式[^3]

@@ -1,0 +1,5 @@
+require_relative 'method_add_new_methods_to_existing_method_1_extension'
+
+class Foo
+
+end

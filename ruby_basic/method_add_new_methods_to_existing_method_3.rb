@@ -1,0 +1,3 @@
+require_relative 'method_add_new_methods_to_existing_method_3_class'
+
+puts Foo.bar
