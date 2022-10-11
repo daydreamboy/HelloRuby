@@ -11,6 +11,12 @@ require_relative './require_tool'
 # A tool used in Podfile
 #
 class PodfileTool
+
+  # @note include some modules firstly
+  if RequireTool.require_relative_if_needed './podfile_tool_extension_utility'
+    include PodfileToolUtility
+  end
+
   ##
   # [Public] change xcconfig files of the .xcodeproj which located in Podfile's folder
   #
