@@ -1349,6 +1349,114 @@ alias
 
 
 
+### (2) %符号标记
+
+%符号标记 (percentage notation)属于Ruby的语法，据说是参考Perl语法[^32]。
+
+它的基本格式是，以%为前缀，跟着一个特定字符，以及一对分隔符。语法结构，如下
+
+```
+%[unique character]<delimiters>...</delimiters>
+```
+
+* unique character是可选的。支持q、Q、w、W等
+
+* delimiters是单个字符，字符符合alpha-numeric规则，常见的符号是`()`和`[]`。
+
+注意
+
+> 特殊符号比如`[`、`(`，也属于alpha-numeric规则
+
+
+
+有几种用途，如下
+
+* 生成字面量字符串或者插值的字符串 (plain and interpolated Strings)
+* 字符串数组 (String Arrays)
+* 符号数组 (Symbol Arrays)
+* shell命令 (Shell commands)
+* 正则表达式 (regular expressions)
+
+
+
+采用%符号标记的示例，如下
+
+| Literal | Description                                                  | Bracket type |
+| :------ | :----------------------------------------------------------- | :----------- |
+| %q      | 字面字符串，类似双引号和单引号字符串 (Simple non-interpolated String) | ()           |
+| %Q      | 格式化字符串 (Interpolated String)                           | ()           |
+| %       | 字面字符串，同%q (Interpolated String (default))             | ()           |
+| %w      | 字面字符串数组 (Simple non-interpolated String Array)        | []           |
+| %W      | 格式化字符串数组 (Interpolated String Array)                 | []           |
+| %i      | 字面符号数组 (Simple non-inteprolated Symbol Array)          | []           |
+| %I      | 格式化字面符号数组 (Interpolated Symbol Array)               | []           |
+| %x      | 执行shell命令，类似``写法 (Interpolated shell command)       | ()           |
+| %r      | 格式化的正则表达式 (Interpolated regular expression)         | {}           |
+
+
+
+举个例子，如下
+
+```ruby
+def test_default_percentage
+  puts %(Ruby is awesome) # => "Ruby is awesome"
+  puts %[Ruby is awesome] # => "Ruby is awesome"
+  puts %%Ruby is awesome% # => "Ruby is awesome"
+  puts %.Ruby is awesome. # => "Ruby is awesome"
+
+  puts '------------------'
+end
+
+def test_nested_delimiter
+  puts %(Ruby (is) awesome) # => "Ruby (is) awesome"
+  puts %[Ruby [is awesome]] # => "Ruby [is awesome]"
+  puts %<Ruby <<is> awesome>> # => "Ruby <<is> awesome>"
+
+  # Note: need escape by \
+  puts %-Ruby \-is\- awesome- # => "Ruby -is- awesome"
+
+  puts '------------------'
+end
+
+def test_percentage_notation
+  language = 'Ruby'
+
+  puts %q('Simple' "non-interpolated" String.) # => "'Simple' \"non-interpolated\" String."
+  puts %Q(Interpolated "#{language}" String.) # => "Interpolated \"Ruby\" String."
+  puts %(Interpolated "#{language}" String (default).) # => "Interpolated \"Ruby\" String (default)."
+
+  # Simple non-interpolated String Array:
+  puts %w[Ruby Javascript Coffeescript] # => ["Ruby", "Javascript", "Coffeescript"]
+
+  # Interpolated String Array:
+  puts %W[#{language} Javascript Coffeescript] # => ["Ruby", "Javascript", "Coffeescript"]
+
+  #  Simple non-interpolated Symbol Array:
+  array1 = %i[ruby javascript coffeescript] # => [:ruby, :javascript, :coffeescript]
+  dump_object(array1)
+
+  # Interpolated Symbol Array:
+  array2 = %I[#{language.downcase} javascript coffeescript] # => [:ruby, :javascript, :coffeescript]
+  dump_object(array2)
+
+  puts %x(echo #{language} interpolated shell scripting command)
+
+  # => "Ruby interpolated shell scripting command\n"
+  reg = %r{/#{language} regexp/i} # => /\/Ruby regexp\/i/
+  dump_object(reg)
+
+  puts '------------------'
+end
+```
+
+
+
+
+
+
+
+
+
 ## 11、Comments
 
 ### (1) 代码注释方式[^4]
@@ -2993,7 +3101,7 @@ https://gems.ruby-china.com/
 
 [^31]:https://stackoverflow.com/a/3064161
 
-
+[^32]:http://www.chrisrolle.com/blog/ruby-percentage-notations
 
 
 
