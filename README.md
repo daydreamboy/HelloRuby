@@ -1564,7 +1564,11 @@ end
 
 
 
+### (3) require和require_relative
 
+TODO
+
+https://stackoverflow.com/questions/25314237/why-relative-path-doesnt-work-in-ruby-require
 
 
 
