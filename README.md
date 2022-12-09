@@ -963,6 +963,58 @@ inherited实例方法是一个私有方法，当发生类继承时，会触发�
 
 
 
+
+
+#### a. 实例变量(`@name`)和类变量(`@@name`)
+
+使用一个`@`符号，例如`@name`来表示实例变量。该变量是每个对象独享。
+
+使用一个`@@`符号，例如`@@name`来表示类变量。该变量是每个对象共享。
+
+
+
+举个例子[^33]，如下
+
+```ruby
+# 使用@foo
+class Yasin
+  def foo=(value)
+    @foo = value
+  end
+
+  def foo
+    @foo
+  end
+end
+
+yasin = Yasin.new
+yasin.foo=1
+yasin.foo #=> 1
+yasin_2 = Yasin.new
+yasin_2.foo #> nil
+
+# 使用@@foo
+class Yasin
+  def foo=(value)
+    @@foo = value
+  end
+
+  def foo
+    @@foo
+  end
+end
+
+yasin = Yasin.new
+yasin.foo=1
+yasin.foo #=> 1
+yasin_2 = Yasin.new
+yasin_2.foo #=> 1
+```
+
+
+
+
+
 ### (3) Object
 
 ​       Object是用户定义class的基类，即使不显示使用继承，默认基类也是Object。可以通过superclass方法，查看它的父类，如下
@@ -976,7 +1028,7 @@ puts Klass.superclass
 
 
 
-#### send方法
+#### a. send方法
 
 send方法，是一个运行时方法，可以在运行时调用接受者的方法。接受者可以是对象或者类。
 
@@ -1013,7 +1065,7 @@ Klass.send :Hello, 'gentle2', 'readers2'
 
 
 
-#### then方法
+#### b. then方法
 
 then方法和yield_self方法是同一个方法，它的作用是提供链式调用。它们的签名，如下
 
@@ -1039,7 +1091,7 @@ puts output
 
 ### (4) Module
 
-#### class_eval方法
+#### a. class_eval方法
 
 class_eval方法，是一个运行时方法，可以向类添加方法（注意：class是继承自module）。
 
@@ -1078,7 +1130,7 @@ puts jimmy.say_hello3 # "Hello3!"
 
 
 
-#### instance_method方法
+#### b. instance_method方法
 
 instance_method方法，用于构造一个未绑定的方法对象，再通过bind方法来绑定self所指向的对象。
 
@@ -1332,6 +1384,67 @@ p.logger.debug "just a test"
 ## 7、Exceptions
 
 TODO
+
+### a. raise
+
+raise语句可以抛出一个异常。
+
+举个例子，如下
+
+```ruby
+def test_raise_with_string
+  # Note: raise a RuntimeError
+  raise 'This is an exception'
+end
+
+def test_raise_with_StandardError
+  raise StandardError.new "This is an exception"
+end
+
+def test_raise_with_Exception
+  raise Exception.new "This is an exception"
+end
+```
+
+> 示例代码，见Exception_raise.rb
+
+
+
+### b. resuce
+
+举个例子，如下
+
+```ruby
+class MyCustomException < StandardError
+  def initialize(msg="This is a custom exception", exception_type="custom")
+    @exception_type = exception_type
+    super(msg)
+  end
+
+  def exception_type
+    @exception_type
+  end
+end
+
+def test_raise_with_custom_exception
+  raise MyCustomException.new "Message, message, message", "Yup"
+end
+
+def test_raise_and_rescue_with_custom_exception
+  begin
+    raise MyCustomException.new "Message, message, message", "Yup"
+  rescue MyCustomException => e
+    puts e.message # Message, message, message
+    puts e.exception_type # Yup
+  end
+end
+```
+
+> 示例代码，见Exception_raise.rb
+
+
+
+
 
 ## 8、Precedence
 
@@ -3103,5 +3216,5 @@ https://gems.ruby-china.com/
 
 [^32]:http://www.chrisrolle.com/blog/ruby-percentage-notations
 
-
+[^33]:https://stackoverflow.com/questions/13248510/difference-between-declaring-object-with-single-and-double-in-ruby
 
