@@ -3,7 +3,7 @@
 
 class RequireTool
   ##
-  # use require if needed
+  # Require a relative rb file safely based on the file path of the caller
   #
   # @param [String]  relative_file_path, which without file extension
   #

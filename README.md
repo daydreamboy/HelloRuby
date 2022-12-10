@@ -1566,9 +1566,24 @@ end
 
 ### (3) require和require_relative
 
-TODO
+这里对比下require和require_relative
 
-https://stackoverflow.com/questions/25314237/why-relative-path-doesnt-work-in-ruby-require
+| 语句             | 作用                                                    | 说明           |
+| ---------------- | ------------------------------------------------------- | -------------- |
+| require          | 导入load paths中匹配的脚本                              | 不支持相对路径 |
+| require_relative | 根据当前caller脚本的路径，通过相对路径查找对应脚本[^35] | 支持相对路径   |
+
+说明
+
+> 1. 通过`ruby -e 'puts $:'`，可以检查load paths[^34]
+
+
+
+
+
+
+
+
 
 
 
@@ -3221,4 +3236,6 @@ https://gems.ruby-china.com/
 [^32]:http://www.chrisrolle.com/blog/ruby-percentage-notations
 
 [^33]:https://stackoverflow.com/questions/13248510/difference-between-declaring-object-with-single-and-double-in-ruby
+[^34]:https://stackoverflow.com/questions/9474299/what-are-the-paths-that-require-looks-up-by-default
+[^35]:https://stackoverflow.com/questions/25314237/why-relative-path-doesnt-work-in-ruby-require
 

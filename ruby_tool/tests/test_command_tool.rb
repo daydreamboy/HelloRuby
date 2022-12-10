@@ -1,4 +1,4 @@
-require '../../ruby_tool/command_tool'
+require_relative '../../ruby_tool/command_tool'
 
 def test_which
   puts Command.which('ruby')
