@@ -264,6 +264,47 @@ MatchData的string方法返回原始需要匹配的字符串，而to_s方法返�
 
 ## 2、Assignment
 
+### (1) `||=`条件赋值操作符
+
+`||=`是一个条件赋值操作符(conditional assignment operator)，有一个类似||的短路逻辑。
+
+以`a ||= b`为例[^36]，如果
+
+* a是未定义或false，则将b赋值给a
+* a有定义且值可以判断为true，则直接使用a值，不会将b赋值给a
+
+可以将`a ||= b`理解为`a || a = b`。
+
+举个例子，如下
+
+```ruby
+a ||= nil # => nil
+a ||= 0 # => 0 # a = 0赋值成功
+a ||= 2 # => 0 # a没有赋值成功，还是之前的0
+
+foo = false # => false
+foo ||= true # => true
+foo ||= false # => true
+```
+
+
+
+#### a. 变量赋值的懒加载方法
+
+使用`||=`，结合`begin...end`代码块，可以实现一个懒加载方法[^37]，如下
+
+```ruby
+def source
+  @source ||= begin
+    { :key => "value "}
+  end
+end
+```
+
+当首次访问source方法时，才会初始化@source变量，而且只会初始化一次。
+
+
+
 
 
 ## 3、Control Expressions
@@ -3238,4 +3279,9 @@ https://gems.ruby-china.com/
 [^33]:https://stackoverflow.com/questions/13248510/difference-between-declaring-object-with-single-and-double-in-ruby
 [^34]:https://stackoverflow.com/questions/9474299/what-are-the-paths-that-require-looks-up-by-default
 [^35]:https://stackoverflow.com/questions/25314237/why-relative-path-doesnt-work-in-ruby-require
+
+[^36]:https://stackoverflow.com/questions/995593/what-does-or-equals-mean-in-ruby
+[^37]:https://stackoverflow.com/questions/34628349/what-is-use-of-begin-end-block-in-ruby
+
+
 
