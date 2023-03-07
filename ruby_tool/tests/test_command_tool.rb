@@ -12,6 +12,22 @@ def test_exists
   puts "python3 = #{Command.exists?('python3')}"
 end
 
+def get_available_python_command
+  require_relative '../../ruby_tool/command_tool'
+
+  if Command.exists?("python3")
+    command = "python3"
+  elsif Command.exists?("python")
+    command = "python"
+  else
+    raise "No available python on this system"
+  end
+  command
+end
+
 test_which
 test_exists
+
+command = get_available_python_command
+puts "#{command} xxx.py"
 
