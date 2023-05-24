@@ -27,7 +27,7 @@ class Subcommand_remove_local_other_branch
         @@options[:verbose] = v
       end
 
-      opts.on('-d', '--debug', 'Execute in debug mode and print debug info') do |v|
+      opts.on('-d', '--debug', 'No run command in debug mode and print debug info') do |v|
         @@options[:debug] = v
       end
     end
