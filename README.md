@@ -2745,7 +2745,7 @@ YARD支持的[tag列表](https://www.rubydoc.info/gems/yard/file/docs/Tags.md#Ta
 
 
 
-## 17、使用RVM（Ruby Version Manager）
+## 17、使用RVM (Ruby Version Manager)
 
 ### (1) 安装RVM
 
@@ -3058,6 +3058,62 @@ TODO：https://ruby.github.io/rake/doc/rakefile_rdoc.html#label-Tasks+that+take+
 
 
 
+## 19、使用Bundler
+
+Bundler是Ruby工程使用的gem管理工具。[官方文档](https://bundler.io/)对Bundler的描述，如下
+
+> Bundler provides a consistent environment for Ruby projects by tracking and installing the exact gems and versions that are needed.
+
+当一个Ruby工程，依赖其他gem提供的API，使用Bunder提供Gemfile文件，可管理依赖gem的版本号。通过`bundle install`命令，可以安装Gemfile文件描述的gem包。
+
+bundle命令默认安装在Ruby中，参考官方文档描述[^38]，如下
+
+> If you do not have Ruby installed, do that first and then check back here! Any modern distribution of Ruby comes with Bundler preinstalled by default.
+
+使用Bundler有两个步骤：
+
+* 编写Gemfile文件
+* 执行bundle命令
+
+举个例子[^38]，如下
+
+Gemfile文件的内容，如下
+
+```ruby
+source 'https://rubygems.org'
+gem 'nokogiri'
+gem 'rack', '~> 2.2.4'
+gem 'rspec'
+```
+
+然后执行bundle命令
+
+```shell
+$ bundle install
+$ git add Gemfile Gemfile.lock
+```
+
+这里Gemfile.lock是根据Gemfile文件生成的，可以一起放入git仓库中。
+
+
+
+### (1) 使用Gemfile
+
+在执行bundle命令之前，导出BUNDLE_GEMFILE环境变量，可以指定Gemfile的路径[^39]。
+
+```shell
+export BUNDLE_GEMFILE="$project_bundle/Gemfile"
+command bundle install --no-prune
+```
+
+TODO: https://bundler.io/guides/gemfile.html
+
+
+
+### (2) 使用bundle命令
+
+TODO: https://bundler.io/v2.4/man/bundle-install.1.html
+
 
 
 ## 附录
@@ -3198,9 +3254,11 @@ $ gem which cocoapods
 
 
 
-#### (2) gem源列表
+#### (2) gem的常用源
 
-https://gems.ruby-china.com/
+* https://rubygems.org/ (官方)
+
+* https://gems.ruby-china.com/
 
 
 
@@ -3282,6 +3340,9 @@ https://gems.ruby-china.com/
 
 [^36]:https://stackoverflow.com/questions/995593/what-does-or-equals-mean-in-ruby
 [^37]:https://stackoverflow.com/questions/34628349/what-is-use-of-begin-end-block-in-ruby
+
+[^38]:https://bundler.io/
+[^39]:https://stackoverflow.com/questions/3372254/how-to-tell-bundler-where-the-gemfile-is
 
 
 
