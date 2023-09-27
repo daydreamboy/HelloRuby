@@ -90,7 +90,7 @@ class CmdParser
         self.cmd_options[:debug] = value
       end
 
-      opts.on("--dSYM[=PATH]", "The path of dSYM file") do |value|
+      opts.on("-s", "--dSYM[=PATH]", "The path of dSYM file") do |value|
         self.cmd_options[:dSYM] = value
       end
 
