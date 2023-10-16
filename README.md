@@ -2684,7 +2684,7 @@ end
 
 ### (6) 比较版本号字符串
 
-Ruby的gem库，提供Version类，可以用于比较版本号字符串。
+方式1：使用Gem::Version对象
 
 举个例子[^31]，如下
 
@@ -2693,6 +2693,33 @@ Gem::Version.new('0.4.1') > Gem::Version.new('0.10.1')
 ```
 
 
+
+方式2：使用Gem::Dependency对象
+
+举个例子，如下
+
+```ruby
+VERSION = "1.2.0"
+def test2
+  def CompareVersion(version)
+    Gem::Dependency.new('', version).match?('', VERSION)
+  end
+
+  if CompareVersion('>=1.2.0')
+    puts ">=1.2.0"
+  else
+    puts "<1.2.0"
+  end
+
+  if CompareVersion('>3.0')
+    puts ">3.0"
+  else
+    puts "<=3.0"
+  end
+end
+```
+
+上面使用`Gem::Dependency`对象的match方法进行比较。
 
 
 
