@@ -44,7 +44,7 @@ class Log
 
   ##
   # Debug
-  def self.d(arg, debug = true)
+  def self.d(arg, dump_mode = true, debug = true)
     # @@logger.debug(msg)
     if debug
       loc = caller_locations.first
@@ -56,7 +56,7 @@ class Log
       # get the part of (xxx)
       parenthesis_part = callerString[/\(.+\)/]
 
-      # check if match the format (xx, yy)
+      # check if match the format (xx, yy, zz)
       match_data = /^\((.+),(.+)\)$/.match(parenthesis_part)
       if not match_data.nil?
         captures = match_data.captures
@@ -71,7 +71,11 @@ class Log
       filename = loc.path
       lineNo = loc.lineno
 
-      puts "[Debug] #{filename}:#{lineNo}: #{arg_name_str} = (#{arg.class}) #{arg.inspect}".cyan
+      if dump_mode
+        puts "[Debug] #{filename}:#{lineNo}: #{arg_name_str} = (#{arg.class}) #{arg.inspect}".cyan
+      else
+        puts "[Debug] #{filename}:#{lineNo}: #{arg}".cyan
+      end
     end
   end
 

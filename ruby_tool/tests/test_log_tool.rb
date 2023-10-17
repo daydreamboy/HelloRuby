@@ -2,10 +2,9 @@
 
 require_relative '../ruby_tools'
 
-flag = true
-
 Log.i('This is an Info')
 Log.d('This is a Debug')
-Log.d('This is a Debug with flag', flag)
+Log.d('This is a Debug, but never print', true, false)
+Log.d('This is a Debug without dump mode', false)
 Log.e('This is an Error')
 Log.w('This is a Warning')
