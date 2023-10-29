@@ -116,7 +116,9 @@ class GitBatch
 
   def run_git_command(subcommandline)
     search_current_git_repos do |entry|
-      if File.directory? File.join('./', entry) and File.directory? File.join('./', entry, '.git')
+      path = File.join('./', entry)
+      # Note: check folder or a soft link for folder
+      if (File.directory? path or (File.symlink?(path) and File.directory? File.readlink(path) )) and File.directory? File.join(path, '.git')
         cmd = "cd #{entry} && git #{subcommandline}"
         # dump_object(cmd)
         puts "\033[32m[#{entry}]\033[0m"
