@@ -120,7 +120,7 @@ class GitBatch
       path = PathTool.get_real_path(File.join('./', entry))
       # Note: check folder or a soft link for folder
       if File.directory?(path) and File.directory?(File.join(path, '.git'))
-        cmd = "cd #{entry} && git #{subcommandline}"
+        cmd = "cd #{path} && git #{subcommandline}"
         # dump_object(cmd)
         puts "\033[32m[#{entry}]\033[0m"
 
@@ -135,6 +135,8 @@ class GitBatch
             puts "\033[31m#{stderr}\033[0m"
           end
         end
+
+        puts ""
       end
     end
   end
@@ -165,7 +167,7 @@ class GitBatch
       self.configuration = JSON.parse File.read config_file_path
       if self.debugging
         puts "[Debug] #{self.configuration}"
-        puts
+        puts ""
       end
     end
 
