@@ -5,3 +5,4 @@
 require_relative './dump_tool'
 require_relative './collection_tool'
 require_relative './log_tool'
+require_relative './path_tool'

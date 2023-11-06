@@ -1756,7 +1756,7 @@ dump_object(__method__) # nil
 
 ## 14、常用Ruby库
 
-### (1) json库
+### (1) json
 
 Ruby内置提供json库
 
@@ -1767,7 +1767,7 @@ Ruby内置提供json库
 
 
 
-### (2) optparse库
+### (2) optparse
 
 Ruby内置提供optparse库，该库中OptionParse类，用于解析CLI参数。
 
@@ -2364,6 +2364,22 @@ test_env_load
 TODO: RubyGem
 
 
+
+### (7) open3
+
+`open3`库是Ruby内置库，可以直接使用。举个例子，如下
+
+```ruby
+require 'open3'
+stdout, stderr, status = Open3.capture3("ls")
+if status.success?
+  # success
+else
+  # failure
+end
+```
+
+使用`Open3.capture3`方法，获取三个返回值。
 
 
 
