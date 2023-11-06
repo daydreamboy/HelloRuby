@@ -7,6 +7,7 @@ require 'json'
 require 'open3'
 require 'colored2'
 require 'benchmark'
+require_relative '../ruby_tool/path_tool'
 # require_relative '../ruby_tool/dump_tool'
 
 $CONFIG_FILE_PATH = './git-batch_config.json'
@@ -116,9 +117,9 @@ class GitBatch
 
   def run_git_command(subcommandline)
     search_current_git_repos do |entry|
-      path = File.join('./', entry)
+      path = PathTool.get_real_path(File.join('./', entry))
       # Note: check folder or a soft link for folder
-      if (File.directory? path or (File.symlink?(path) and File.directory? File.readlink(path) )) and File.directory? File.join(path, '.git')
+      if File.directory?(path) and File.directory?(File.join(path, '.git'))
         cmd = "cd #{entry} && git #{subcommandline}"
         # dump_object(cmd)
         puts "\033[32m[#{entry}]\033[0m"
@@ -134,8 +135,6 @@ class GitBatch
             puts "\033[31m#{stderr}\033[0m"
           end
         end
-
-        puts
       end
     end
   end
