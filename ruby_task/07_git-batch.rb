@@ -117,7 +117,7 @@ class GitBatch
 
   def run_git_command(subcommandline)
     search_current_git_repos do |entry|
-      path = PathTool.get_real_path(File.join('./', entry))
+      path = PathTool.get_real_path(File.join('./', entry)).strip
       # Note: check folder or a soft link for folder
       if File.directory?(path) and File.directory?(File.join(path, '.git'))
         cmd = "cd #{path} && git #{subcommandline}"
