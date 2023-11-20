@@ -14,6 +14,6 @@ target 'DummyRemoveTarget' do
   use_frameworks!
 end
 
-post_install do |installer|
-  PodfileTool.remove_targets!(__FILE__, ["AnotherAppShareExtension", "AppShareExtension"] , ["DummyRemoveTarget"], true, true)
+post_integrate do |installer|
+  PodfileTool.remove_dependency_targets!(__FILE__, ["AnotherAppShareExtension", "AppShareExtension"] , "DummyRemoveTarget", false, true)
 end

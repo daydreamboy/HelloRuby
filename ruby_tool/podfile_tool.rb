@@ -418,7 +418,31 @@ class PodfileTool
     end
   end
 
-  def self.remove_targets!(podfile_path, target_list_to_remove, parent_target, soft_remove = true, debug = false)
+  ##
+  # [Public] Remove dependency target (e.g. app extension) from the main targets
+  #
+  # @param [Object] podfile_path. Usually pass __FILE__
+  #        The path of Podfile
+  # @param [Array]  target_list_to_remove
+  #        The target list to remove
+  # @param [String]  parent_target
+  #        The parent target which target_list_to_remove belong to
+  # @param [Boolean]  soft_remove. Default is true
+  #        If true, only remove dependency, not remove the target itself
+  #        If false, remove both target and target dependency in `target_list_to_remove`
+  # @param [Boolean] debug
+  #        The debug flag
+  # @return [Void]
+  #
+  # @note Call this method in post_integrate, not in post_install which also change project.pbxproj that is a conflict
+  #
+  # @example
+  #
+  # post_integrate do |installer|
+  #   PodfileTool.remove_dependency_targets!!(__FILE__, ["AnotherAppShareExtension", "AppShareExtension"] , "DummyRemoveTarget", true, true)
+  # end
+  #
+  def self.remove_dependency_targets!(podfile_path, target_list_to_remove, parent_target, soft_remove = true, debug = false)
     podfile_dir = File.expand_path File.dirname(podfile_path)
     xcodeproj_files = Dir.glob("#{podfile_dir}/*.xcodeproj")
     if xcodeproj_files.length != 1
@@ -430,29 +454,65 @@ class PodfileTool
 
     project = Xcodeproj::Project.open(project_path)
     project.targets.each do |target|
-      dump_object(target)
-      # # Note: skip the target in the target_list
-      # if Array(target_list).length > 0 && !target_list.include?(target.name)
-      #   next
-      # end
-      #
-      # target.build_configurations.each do |xcconfig|
-      #   if xcconfig.base_configuration_reference.nil?
-      #     next
-      #   end
-      #
-      #   xcconfig_pathname = xcconfig.base_configuration_reference.real_path
-      #   xcconfig_name = xcconfig.base_configuration_reference.name
-      #   if File.exists?(xcconfig_pathname)
-      #     Log.v("<<<Start modify xcconfig for `#{xcconfig_name}`")
-      #     config = Xcodeproj::Config.new(File.new(xcconfig_pathname.to_path))
-      #     change_xcconfig_attrs!(config, config_map, debug)
-      #     config.save_as(xcconfig_pathname)
-      #     Log.v(">>>End modify xcconfig for `#{xcconfig_name}`")
-      #   end
-      # end
+      # # Note: skip the target not match parent_target
+      if target.name != parent_target
+        next
+      end
+
+      # Step1: remove dependency for parent target
+      dependencies_to_remove = []
+      target.dependencies.each do |dependency|
+        if Array(target_list_to_remove).length > 0 && !target_list_to_remove.include?(dependency.target.name)
+          next
+        end
+        dependencies_to_remove.append(dependency)
+      end
+
+      dependencies_to_remove.each do |dependency|
+        target.dependencies.delete(dependency)
+        Log.v("remove dependency target `#{dependency.target.name}` from target `#{target.name}`")
+      end
+
+      # Step2: remove embedded build file
+      target.build_phases.each do |build_phase|
+        if "PBXCopyFilesBuildPhase" == build_phase.isa
+          build_files_to_remove = []
+          build_phase.files.each do |build_file|
+
+            project.targets.each do |target|
+              if Array(target_list_to_remove).length > 0 && !target_list_to_remove.include?(target.name)
+                next
+              end
+              if target.product_reference == build_file.file_ref
+                build_files_to_remove.append(build_file)
+                break
+              end
+            end
+          end
+
+          build_files_to_remove.each do |build_file|
+            Log.v("remove embedded build file `#{build_file.display_name}` in build phase `#{build_phase.display_name}`")
+            build_phase.remove_build_file(build_file)
+          end
+        end
+      end
     end
-    # project.save(project_path)
+
+    # Step3: remove target
+    if !soft_remove
+      temp_target_list_to_remove = []
+      project.targets.each do |target|
+        if Array(target_list_to_remove).length > 0 && !target_list_to_remove.include?(target.name)
+          next
+        end
+        temp_target_list_to_remove.append(target)
+      end
+      temp_target_list_to_remove.each do |target|
+        Log.v("remove target `#{target.name}` from project `#{project.root_object.name}`")
+        target.remove_from_project
+      end
+    end
+    project.save(project_path)
   end
 
   ### Private Methods
