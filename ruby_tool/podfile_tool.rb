@@ -6,6 +6,8 @@ require 'json'
 require 'xcodeproj'
 require_relative './log_tool'
 require_relative './require_tool'
+# For debug
+require_relative './dump_tool'
 
 ##
 # A tool used in Podfile
@@ -105,6 +107,8 @@ class PodfileTool
     project.save(project_path)
   end
 
+  ### Private Methods
+  #
   def self.change_other_ldflags!(config, key, change_map, debug = false)
     library_to_remove = change_map[:library_to_remove]
     library_to_add = change_map[:library_to_add]
@@ -412,6 +416,43 @@ class PodfileTool
     if RequireTool.require_relative_if_needed './podfile_hook_dependency'
       PodfileDependencyHook.do_dependency_hook(dependency_config_file, debug)
     end
+  end
+
+  def self.remove_targets!(podfile_path, target_list_to_remove, parent_target, soft_remove = true, debug = false)
+    podfile_dir = File.expand_path File.dirname(podfile_path)
+    xcodeproj_files = Dir.glob("#{podfile_dir}/*.xcodeproj")
+    if xcodeproj_files.length != 1
+      Log.e "expect only a .xcodeproj, but multiple .xcodeproj files at #{podfile_dir}"
+      return
+    end
+
+    project_path = xcodeproj_files[0]
+
+    project = Xcodeproj::Project.open(project_path)
+    project.targets.each do |target|
+      dump_object(target)
+      # # Note: skip the target in the target_list
+      # if Array(target_list).length > 0 && !target_list.include?(target.name)
+      #   next
+      # end
+      #
+      # target.build_configurations.each do |xcconfig|
+      #   if xcconfig.base_configuration_reference.nil?
+      #     next
+      #   end
+      #
+      #   xcconfig_pathname = xcconfig.base_configuration_reference.real_path
+      #   xcconfig_name = xcconfig.base_configuration_reference.name
+      #   if File.exists?(xcconfig_pathname)
+      #     Log.v("<<<Start modify xcconfig for `#{xcconfig_name}`")
+      #     config = Xcodeproj::Config.new(File.new(xcconfig_pathname.to_path))
+      #     change_xcconfig_attrs!(config, config_map, debug)
+      #     config.save_as(xcconfig_pathname)
+      #     Log.v(">>>End modify xcconfig for `#{xcconfig_name}`")
+      #   end
+      # end
+    end
+    # project.save(project_path)
   end
 
   ### Private Methods

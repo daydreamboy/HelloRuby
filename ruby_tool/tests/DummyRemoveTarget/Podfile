@@ -1,26 +1,19 @@
-# Uncomment the next line to define a global platform for your project
-# platform :ios, '9.0'
+require '../../podfile_tool'
+
+platform :ios, '10.0'
 
 target 'AnotherAppShareExtension' do
-  # Comment the next line if you don't want to use dynamic frameworks
   use_frameworks!
-
-  # Pods for AnotherAppShareExtension
-
 end
 
 target 'AppShareExtension' do
-  # Comment the next line if you don't want to use dynamic frameworks
   use_frameworks!
-
-  # Pods for AppShareExtension
-
 end
 
 target 'DummyRemoveTarget' do
-  # Comment the next line if you don't want to use dynamic frameworks
   use_frameworks!
+end
 
-  # Pods for DummyRemoveTarget
-
+post_install do |installer|
+  PodfileTool.remove_targets!(__FILE__, ["AnotherAppShareExtension", "AppShareExtension"] , ["DummyRemoveTarget"], true, true)
 end
