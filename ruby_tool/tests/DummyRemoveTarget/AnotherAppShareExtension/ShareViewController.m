@@ -16,7 +16,7 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     
-    self.placeholder = @"This is AppShareExtension";
+    self.placeholder = @"This is AnotherAppShareExtension";
 }
 
 - (BOOL)isContentValid {
