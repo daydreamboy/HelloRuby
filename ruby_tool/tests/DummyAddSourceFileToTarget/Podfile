@@ -1,0 +1,9 @@
+platform :ios, '10.0'
+
+target 'AppShareExtension' do
+  use_frameworks!
+end
+
+target 'DummyAddSourceFileToTarget' do
+  use_frameworks!
+end
