@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 56;
+	objectVersion = 53;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -162,7 +162,6 @@
 				4BCF151FE6556C86A6D93636 /* Pods-DummyAddSourceFileToTarget.debug.xcconfig */,
 				E2B6506DC3856CCAC185C609 /* Pods-DummyAddSourceFileToTarget.release.xcconfig */,
 			);
-			name = Pods;
 			path = Pods;
 			sourceTree = "<group>";
 		};
@@ -225,7 +224,7 @@
 				};
 			};
 			buildConfigurationList = 4F326B3E2B0C7B7600DEEBFA /* Build configuration list for PBXProject "DummyAddSourceFileToTarget" */;
-			compatibilityVersion = "Xcode 14.0";
+			compatibilityVersion = "Xcode 10.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (

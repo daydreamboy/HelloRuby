@@ -8,6 +8,7 @@ require 'json'
 require 'xcodeproj'
 require 'benchmark'
 require 'optparse'
+require 'cocoapods'
 require_relative './log_tool'
 require_relative './require_tool'
 # For debug
@@ -151,6 +152,7 @@ class PodPostInstallTool
 end
 
 time = Benchmark.measure {
+  puts "CocoaPods version: #{Pod::VERSION}"
   PodPostInstallTool.new.run
 }
 
