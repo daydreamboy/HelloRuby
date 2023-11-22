@@ -40,7 +40,7 @@ class PodPostInstallTool
         end,
         :action => Proc.new do |subcommand, subcommandline, subcommandSetting|
           self.validate_options(subcommandSetting[:optParser], [:path, :target, :group], subcommandSetting[:options])
-          self.handleSubcommandAddSourceFile(subcommandSetting[:options][:path], subcommandSetting[:options][:target])
+          self.handleSubcommandAddSourceFile(subcommandSetting[:options][:path], subcommandSetting[:options][:target], subcommandSetting[:options][:group])
         end,
         :options => {}
       }
@@ -124,7 +124,7 @@ class PodPostInstallTool
     end
   end
 
-  def handleSubcommandAddSourceFile(podfile_path, target_name)
+  def handleSubcommandAddSourceFile(podfile_path, target_name, folder_path)
     if not File.exist?(File.expand_path(podfile_path))
       Log.e "Podfile not exists at #{podfile_path}"
       return
@@ -138,12 +138,22 @@ class PodPostInstallTool
 
     project_path = xcodeproj_files[0]
 
+    found_target = nil
     project = Xcodeproj::Project.open(project_path)
     project.targets.each do |target|
       # # Note: skip the target not match target_name
-      if target.name != target_name
-        next
+      if target.name == target_name
+        found_target = target
+        break
       end
+    end
+
+    if found_target != nil
+      dump_object(found_target)
+
+      Log.v("Add group `#{File.basename(folder_path)}` in project `#{project.root_object.name}`")
+      group = project.main_group.new_group(File.basename(folder_path), folder_path)
+
 
     end
 
