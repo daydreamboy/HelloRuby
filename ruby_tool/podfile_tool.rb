@@ -454,7 +454,7 @@ class PodfileTool
 
     project = Xcodeproj::Project.open(project_path)
     project.targets.each do |target|
-      # # Note: skip the target not match parent_target
+      # Note: skip the target not match parent_target
       if target.name != parent_target
         next
       end
