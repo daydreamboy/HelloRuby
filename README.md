@@ -576,7 +576,7 @@ testing('a', 'b', 'c', 'd', 'e', d: 2, x: 1)
 
 
 
-#### d. 接收所有参数
+#### f. 接收所有参数
 
 Ruby方法传参可以使用通配符`*`，接收所有参数。此方式不常见，但配合super方法可以将参数透传给父类方法。
 
@@ -1773,7 +1773,7 @@ Ruby内置提供optparse库，该库中OptionParse类，用于解析CLI参数。
 
 
 
-#### 介绍CLI参数
+#### a. 介绍CLI参数
 
 CLI（Command Line Interface）定义命令行工具的参数协议，对于命令行参数分为下面两种
 
@@ -1786,7 +1786,7 @@ CLI（Command Line Interface）定义命令行工具的参数协议，对于命�
 
 
 
-#### 基本用法
+#### b. 基本用法
 
 创建OptionParse对象时，配置on方法回调，最后调用parse方法或parse!方法，完成对CLI参数解析。
 
@@ -1854,7 +1854,7 @@ $ ruby optparse_use_OptionParser.rb -v hello hello2 hello3
 
 
 
-#### 获取所有positional arguments和optional arguments
+#### c. 获取所有positional arguments和optional arguments
 
 获取所有positional arguments和optional arguments，有两种方法
 
@@ -1926,7 +1926,7 @@ $ ruby optparse_get_positional_and_optional_arguments_by_on_method.rb -a -b 3 -v
 
 
 
-#### optional参数的格式
+#### d. optional参数的格式
 
 OptionParser解析optional参数，按照一定格式约定来解析。
 
@@ -2070,7 +2070,7 @@ Ruby 2.6.3p62版本，似乎存在bug，Case 2和Case 3解析结果不一样。
 
 
 
-#### 完整的on方法参数
+#### e. 完整的on方法参数
 
 on方法对于参数顺序没有要求，但是对于参数的值有一定格式规范
 
@@ -2100,7 +2100,7 @@ p ARGV
 
 
 
-#### parameter参数的类型
+#### f. parameter参数的类型
 
 parameter参数的类型，可以是下面几种
 
@@ -2152,7 +2152,7 @@ $ ruby optparse_parameter_type.rb -v -i 3 -p hello -d 3.14 -l 1,2,3,4 1 2 3 4
 
 
 
-#### 优化OptionParser的错误提示
+#### g. 优化OptionParser的错误提示
 
 OptionParser解析可选参数出错，一般会给出下面提示，如下
 
@@ -2193,6 +2193,37 @@ missing argument: -r
 说明
 
 > OptionParser的异常有好几种，例如OptionParser::MissingArgument，但是可以查看源码发现，它们都是继承自OptionParser::ParseError，所以捕获类型设置OptionParser::ParseError
+
+
+
+#### h. 可选参数是多个键值对
+
+如果命令行参数是多个键值对，则可以使用on方法的形式，如下
+
+```ruby
+require 'optparse'
+
+options = {}
+
+OptionParser.new do |opts|
+  opts.banner = "Usage: example.rb [options]"
+
+  opts.on("--item KEY=VALUE", "Description of item option") do |pair|
+    key, value = pair.split('=')
+    options[:items] ||= {}
+    options[:items][key.to_sym] = value
+  end
+end.parse!
+
+puts "Items: #{options[:items]}" if options[:items]
+```
+
+使用下面命令，传入多个键值对，如下
+
+```shell
+$ ruby example.rb --item key1=value1 --item key2=value2
+$ Items: {:key1=>"value1", :key2=>"value2"}
+```
 
 
 
@@ -2255,9 +2286,9 @@ puts Pathname.new('/Users/wesley_chen/6/iOS/Pods/FDFullscreenPopGesture').relati
 
 
 
-### (4) TestUnit[^23]
+### (4) TestUnit库
 
-TestUnit是Ruby的标准库，它提供基本的单元测试能力。
+TestUnit[^23]是Ruby的标准库，它提供基本的单元测试能力。
 
 
 
@@ -2308,7 +2339,7 @@ end
 
 
 
-### (5) dotenv
+### (5) dotenv库
 
 dotenv是三方库，它的GitHub地址是https://github.com/bkeepers/dotenv
 
@@ -2365,7 +2396,7 @@ TODO: RubyGem
 
 
 
-### (7) open3
+### (7) open3库
 
 `open3`库是Ruby内置库，可以直接使用。举个例子，如下
 
@@ -2380,6 +2411,12 @@ end
 ```
 
 使用`Open3.capture3`方法，获取三个返回值。
+
+
+
+### (8) rexml库
+
+
 
 
 
