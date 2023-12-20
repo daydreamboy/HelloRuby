@@ -6,6 +6,7 @@ class PrettyFormatter < REXML::Formatters::Default
   def initialize(indentation = 3)
     super()
     @indentation = indentation
+    @current_level = 0
   end
 
   def write(node, output)
@@ -19,13 +20,17 @@ class PrettyFormatter < REXML::Formatters::Default
   end
 
   def write_element(node, output)
+    # Note: increase level before this node processed
+    @current_level += 1
+
+    Log.d("expanded_name: #{node.expanded_name}")
     output << "<#{node.expanded_name}"
 
     attrs = node.attributes.to_a
+
     unless attrs.empty?
       attrs.each_with_index do |attr, index|
-        # output << "\n" << (" " * @indentation) if index > 0
-        output << "\n" << (" " * @indentation)
+        output << "\n" << (" " * @indentation * @current_level)
         # output << attr.to_string.sub(/=/, '="') << '"'
         output << "#{attr.name} = \"#{attr.value}\""
       end
@@ -38,6 +43,9 @@ class PrettyFormatter < REXML::Formatters::Default
       node.children.each { |child| write(child, output) }
       output << "</#{node.expanded_name}>"
     end
+
+    # Note: decrease level after this node processed
+    @current_level -= 1
   end
 end
 
