@@ -2,11 +2,12 @@ require_relative '../ruby_tool/ruby_tools'
 require 'rexml/document'
 include REXML
 
-class PrettyFormatter < REXML::Formatters::Default
-  def initialize(indentation = 3)
+class EmptyBodyTagFormatter < REXML::Formatters::Default
+  def initialize(indentation: 3, enableSelfClosingTag: true)
     super()
     @indentation = indentation
     @current_level = 0
+    @enableSelfClosingTag = enableSelfClosingTag
   end
 
   def write(node, output)
@@ -19,13 +20,18 @@ class PrettyFormatter < REXML::Formatters::Default
     end
   end
 
-  def write_element(node, output)
-    # Note: increase level before this node processed
-    @current_level += 1
+  def write_text(node, output)
+    # Note: always make text body empty
+    output << ""
+  end
 
-    Log.d("expanded_name: #{node.expanded_name}")
+  def write_element(node, output)
+    current_node_indent = "\n#{" " * @indentation * @current_level}"
+    output << current_node_indent
     output << "<#{node.expanded_name}"
 
+    # Note: increase level before this node's attributes processed
+    @current_level += 1
     attrs = node.attributes.to_a
 
     unless attrs.empty?
@@ -37,10 +43,18 @@ class PrettyFormatter < REXML::Formatters::Default
     end
 
     if node.children.empty?
-      output << " />"
+      if @enableSelfClosingTag
+        output << " />"
+      else
+        output << ">"
+        output << current_node_indent
+        output << "</#{node.expanded_name}"
+      end
     else
       output << ">"
       node.children.each { |child| write(child, output) }
+
+      output << current_node_indent
       output << "</#{node.expanded_name}>"
     end
 
@@ -100,7 +114,7 @@ def test_create_node
       return
     end
 
-    parent_node.add_element(Element.new("EnvironmentVariables"))
+    parent_node = parent_node.add_element(Element.new("EnvironmentVariables"))
     # dump_object(parent_node)
   end
 
@@ -112,9 +126,8 @@ def test_create_node
                           })
   parent_node.add_element(new_node)
 
-  # puts doc.elements['Scheme/LaunchAction']
-
-  formatter = PrettyFormatter.new
+  #formatter = EmptyBodyTagFormatter.new(enableSelfClosingTag: true)
+  formatter = EmptyBodyTagFormatter.new
   File.open("./test/dummy_rexml_CRUD.xml", "w") do |xml_file|
     # doc.write(xml_file, 3)
     formatter.write(doc, xml_file)
