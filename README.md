@@ -1515,11 +1515,7 @@ alias
 
 * unique character是可选的。支持q、Q、w、W等
 
-* delimiters是单个字符，字符符合alpha-numeric规则，常见的符号是`()`和`[]`。
-
-注意
-
-> 特殊符号比如`[`、`(`，也属于alpha-numeric规则
+* delimiters是单个字符，常见的符号是`()`、`[]`或者`{}`。
 
 
 
@@ -1557,7 +1553,8 @@ def test_default_percentage
   puts %[Ruby is awesome] # => "Ruby is awesome"
   puts %%Ruby is awesome% # => "Ruby is awesome"
   puts %.Ruby is awesome. # => "Ruby is awesome"
-
+  puts %{'Ruby' is "awesome"} # => "'Ruby' is "awesome""
+  
   puts '------------------'
 end
 

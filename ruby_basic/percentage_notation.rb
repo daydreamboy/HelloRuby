@@ -10,6 +10,7 @@ def test_default_percentage
   puts %[Ruby is awesome] # => "Ruby is awesome"
   puts %%Ruby is awesome% # => "Ruby is awesome"
   puts %.Ruby is awesome. # => "Ruby is awesome"
+  puts %{'Ruby' is "awesome"} # => "'Ruby' is "awesome""
 
   puts '------------------'
 end
