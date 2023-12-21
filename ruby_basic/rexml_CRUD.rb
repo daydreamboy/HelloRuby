@@ -10,6 +10,44 @@ class EmptyBodyTagFormatter < REXML::Formatters::Default
     @enableSelfClosingTag = enableSelfClosingTag
   end
 
+  def content_after_last_tag(file_path)
+    buffer_size = 1024
+    buffer = ""
+    found = false
+
+    puts File.read(file_path)
+
+    File.open(file_path, 'rb') do |file|
+      dump_object(file)
+      file.seek(0, IO::SEEK_END)
+      dump_object(file.pos)
+      while file.pos > 0 && !found
+        to_read = [file.pos, buffer_size].min
+        file.seek(-to_read, IO::SEEK_CUR)
+        buffer = file.read(to_read) + buffer
+        dump_object(buffer)
+        file.seek(-to_read, IO::SEEK_CUR)
+        found = buffer.include?('>')
+      end
+    end
+
+    dump_object(buffer)
+    dump_object(found)
+    if found
+      return buffer[buffer.rindex('>')..-1]
+    else
+      return ""
+    end
+  end
+
+  # def write_document(node, output)
+  #   super(node, output)
+  #   temp_content = self.content_after_last_tag(output.path)
+  #   dump_object(temp_content)
+  #
+  #   output << temp_content
+  # end
+
   def write(node, output)
     case node
     when XMLDecl
@@ -56,6 +94,9 @@ class EmptyBodyTagFormatter < REXML::Formatters::Default
 
       output << current_node_indent
       output << "</#{node.expanded_name}>"
+      if @current_level == 1
+        output << "\n"
+      end
     end
 
     # Note: decrease level after this node processed
@@ -98,40 +139,46 @@ def test_read_specific_node
 end
 
 def test_create_node
-  xml_file = File.new("./test/dummy_rexml_CRUD.xml")
-  doc = Document.new(xml_file)
-  # Note: not works with custom formatter
-  #doc.context[:attribute_quote] = :quote
-  # puts doc
-  parent_node = doc.elements['Scheme/LaunchAction/EnvironmentVariables']
+  begin
+    xml_file = File.new("./test/dummy_rexml_CRUD.xml")
+    doc = Document.new(xml_file)
+    # Note: not works with custom formatter
+    #doc.context[:attribute_quote] = :quote
+    # puts doc
+    parent_node = doc.elements['Scheme/LaunchAction/EnvironmentVariables']
 
-  if parent_node.nil?
-    # dump_object(parent_node)
-    # puts doc.elements['Scheme']
-
-    parent_node = doc.elements['Scheme/LaunchAction']
     if parent_node.nil?
-      return
+      # dump_object(parent_node)
+      # puts doc.elements['Scheme']
+
+      parent_node = doc.elements['Scheme/LaunchAction']
+      if parent_node.nil?
+        return
+      end
+
+      parent_node = parent_node.add_element(Element.new("EnvironmentVariables"))
+      # dump_object(parent_node)
     end
 
-    parent_node = parent_node.add_element(Element.new("EnvironmentVariables"))
-    # dump_object(parent_node)
+    new_node = Element.new("EnvironmentVariable")
+    new_node.add_attributes({
+                              "key" => "DYLD_PRINT_ENV",
+                              "value" => "1",
+                              "isEnabled" => "YES"
+                            })
+    parent_node.add_element(new_node)
+
+    #formatter = EmptyBodyTagFormatter.new(enableSelfClosingTag: true)
+    formatter = EmptyBodyTagFormatter.new
+    File.open("./test/dummy_rexml_CRUD.xml", "w") do |xml_file|
+      # doc.write(xml_file, 3)
+      formatter.write(doc, xml_file)
+    end
+  rescue => e
+    puts "An error occurred:"
+    puts e.full_message(highlight: true, order: :top)
   end
 
-  new_node = Element.new("EnvironmentVariable")
-  new_node.add_attributes({
-                            "key" => "DYLD_PRINT_ENV",
-                            "value" => "1",
-                            "isEnabled" => "YES"
-                          })
-  parent_node.add_element(new_node)
-
-  #formatter = EmptyBodyTagFormatter.new(enableSelfClosingTag: true)
-  formatter = EmptyBodyTagFormatter.new
-  File.open("./test/dummy_rexml_CRUD.xml", "w") do |xml_file|
-    # doc.write(xml_file, 3)
-    formatter.write(doc, xml_file)
-  end
 end
 
 def test_update_node
