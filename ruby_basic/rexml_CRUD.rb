@@ -2,108 +2,6 @@ require_relative '../ruby_tool/ruby_tools'
 require 'rexml/document'
 include REXML
 
-class EmptyBodyTagFormatter < REXML::Formatters::Default
-  def initialize(indentation: 3, enableSelfClosingTag: true)
-    super()
-    @indentation = indentation
-    @current_level = 0
-    @enableSelfClosingTag = enableSelfClosingTag
-  end
-
-  def content_after_last_tag(file_path)
-    buffer_size = 1024
-    buffer = ""
-    found = false
-
-    puts File.read(file_path)
-
-    File.open(file_path, 'rb') do |file|
-      dump_object(file)
-      file.seek(0, IO::SEEK_END)
-      dump_object(file.pos)
-      while file.pos > 0 && !found
-        to_read = [file.pos, buffer_size].min
-        file.seek(-to_read, IO::SEEK_CUR)
-        buffer = file.read(to_read) + buffer
-        dump_object(buffer)
-        file.seek(-to_read, IO::SEEK_CUR)
-        found = buffer.include?('>')
-      end
-    end
-
-    dump_object(buffer)
-    dump_object(found)
-    if found
-      return buffer[buffer.rindex('>')..-1]
-    else
-      return ""
-    end
-  end
-
-  # def write_document(node, output)
-  #   super(node, output)
-  #   temp_content = self.content_after_last_tag(output.path)
-  #   dump_object(temp_content)
-  #
-  #   output << temp_content
-  # end
-
-  def write(node, output)
-    case node
-    when XMLDecl
-      output << node.to_s.gsub("'", '"')
-      # node.write( output )
-    else
-      super(node, output)
-    end
-  end
-
-  def write_text(node, output)
-    # Note: always make text body empty
-    output << ""
-  end
-
-  def write_element(node, output)
-    current_node_indent = "\n#{" " * @indentation * @current_level}"
-    output << current_node_indent
-    output << "<#{node.expanded_name}"
-
-    # Note: increase level before this node's attributes processed
-    @current_level += 1
-    attrs = node.attributes.to_a
-
-    unless attrs.empty?
-      attrs.each_with_index do |attr, index|
-        output << "\n" << (" " * @indentation * @current_level)
-        # output << attr.to_string.sub(/=/, '="') << '"'
-        output << "#{attr.name} = \"#{attr.value}\""
-      end
-    end
-
-    if node.children.empty?
-      if @enableSelfClosingTag
-        output << " />"
-      else
-        output << ">"
-        output << current_node_indent
-        output << "</#{node.expanded_name}"
-      end
-    else
-      output << ">"
-      node.children.each { |child| write(child, output) }
-
-      output << current_node_indent
-      output << "</#{node.expanded_name}>"
-      if @current_level == 1
-        output << "\n"
-      end
-    end
-
-    # Note: decrease level after this node processed
-    @current_level -= 1
-  end
-end
-
 def traverse(element, indent = 0)
   # Note: each indent with two space
   print "#{'  ' * indent}#{element.name}"
@@ -142,22 +40,15 @@ def test_create_node
   begin
     xml_file = File.new("./test/dummy_rexml_CRUD.xml")
     doc = Document.new(xml_file)
-    # Note: not works with custom formatter
-    #doc.context[:attribute_quote] = :quote
-    # puts doc
     parent_node = doc.elements['Scheme/LaunchAction/EnvironmentVariables']
 
     if parent_node.nil?
-      # dump_object(parent_node)
-      # puts doc.elements['Scheme']
-
       parent_node = doc.elements['Scheme/LaunchAction']
       if parent_node.nil?
         return
       end
 
       parent_node = parent_node.add_element(Element.new("EnvironmentVariables"))
-      # dump_object(parent_node)
     end
 
     new_node = Element.new("EnvironmentVariable")
@@ -168,27 +59,56 @@ def test_create_node
                             })
     parent_node.add_element(new_node)
 
-    #formatter = EmptyBodyTagFormatter.new(enableSelfClosingTag: true)
-    formatter = EmptyBodyTagFormatter.new
+    formatter = REXML::Formatters::Pretty.new
     File.open("./test/dummy_rexml_CRUD.xml", "w") do |xml_file|
-      # doc.write(xml_file, 3)
       formatter.write(doc, xml_file)
     end
   rescue => e
     puts "An error occurred:"
     puts e.full_message(highlight: true, order: :top)
   end
-
 end
 
 def test_update_node
+  xml_file = File.new("./test/dummy_rexml_CRUD.xml")
+  doc = Document.new(xml_file)
+  target_node = doc.elements['Scheme/ArchiveAction']
 
+  if target_node.nil?
+    Log.e("not found Scheme/ArchiveAction")
+    return
+  end
+
+  new_node = REXML::Element.new("ArchiveActionChanged")
+  target_node.attributes.each do |key, value|
+    new_node.attributes[key] = value
+  end
+  new_node.attributes["buildConfiguration"] = "Debug"
+
+  target_node.parent.replace_child(target_node, new_node)
+
+  formatter = REXML::Formatters::Pretty.new
+  File.open("./test/dummy_rexml_CRUD.xml", "w") do |file|
+    formatter.write(doc, file)
+  end
 end
 
 def test_delete_node
-
+  xml_file = File.new("./test/dummy_rexml_CRUD.xml")
+  doc = Document.new(xml_file)
+  target_node = REXML::XPath.first(doc, "//Scheme/BuildAction")
+  if target_node
+    target_node.parent.delete_element(target_node)
+  end
+  formatter = REXML::Formatters::Pretty.new
+  File.open("./test/dummy_rexml_CRUD.xml", "w") do |file|
+    formatter.write(doc, file)
+  end
 end
 
+# Note: test following each method with ./test/dummy_rexml_CRUD.xml
 #test_traverse_all_node
 #test_read_specific_node
-test_create_node
+#test_create_node
+#test_update_node
+test_delete_node
