@@ -1,4 +1,5 @@
 require 'optparse'
+require_relative '../ruby_tool/ruby_tools'
 
 options = {}
 
@@ -31,7 +32,12 @@ puts "Age: #{options[:age]}" if options[:age]
 puts "Student: #{options[:student]}" if options[:student]
 puts "Items: #{options[:items]}" if options[:items]
 
+dump_object(options)
+
 # Usage example
 # $ ruby optparse_option_multiple_key_value.rb --name Alice --age 30 --student --item key1=value1 --item key2=value2
+#
+# Bug example
+# $ ruby optparse_option_multiple_key_value.rb --item key1=value1 --item key2=value2 -name Alice
 
 
