@@ -14,6 +14,22 @@
 
 
 
+## 2、文件操作
+
+
+
+| 名称     | 全名                | 作用                |
+| -------- | ------------------- | ------------------- |
+| XCScheme | Xcodeproj::XCScheme | 修改`.xcscheme`文件 |
+| Config   | Xcodeproj::Config   | 修改`.xcconfig`文件 |
+|          |                     |                     |
+
+
+
+
+
+
+
 ## References
 
 
