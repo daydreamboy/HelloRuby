@@ -2,7 +2,14 @@
 #encoding: utf-8
 
 <<-DOC
-A tool for check static library if has msgSend selector stubs
+A tool for check symbols in binary file which MachO type is static library
+This tool produce the following analysis data:
+- Conflicted symbols 
+- Symbol dependency
+Above results also display related libraries
+For example:
+TODO
+
 DOC
 
 require 'optparse'
@@ -19,7 +26,7 @@ a
 framework
 )
 
-class MsgSendSelectorStubCheckUtility
+class CheckSymbolForStaticLibraryUtility
   attr_accessor :cmd_parser
   attr_accessor :cmd_options
 
@@ -159,6 +166,27 @@ class MsgSendSelectorStubCheckUtility
     end
   end
 
+  ##
+  # Find static library binary files in framework
+  #
+  # @return [Void] Get path list for
+  def find_static_library_in_framework(framework_path)
+    file_ext = File.extname(framework_path).delete('.')
+    if file_ext != 'framework'
+      return []
+    end
+
+    path_list = []
+    Dir.glob(framework_path + '/*') do |item|
+      next if item == '.' or item == '..'
+      if check_if_static_library(item)
+        path_list.append(item)
+      end
+    end
+
+    return path_list
+  end
+
   # parse command line
   def run
     self.cmd_parser.parse!
@@ -182,7 +210,7 @@ class MsgSendSelectorStubCheckUtility
     # Note: only search target under the one level of the dir_path
     Dir.glob(dir_path + '/*') do |item|
       next if item == '.' or item == '..'
-      
+
       # @see https://stackoverflow.com/questions/16902083/exclude-the-from-a-file-extension-in-rails
       file_ext = File.extname(item).delete('.')
       if ext_list.empty? or file_ext == ''
@@ -206,7 +234,7 @@ class MsgSendSelectorStubCheckUtility
         temp_dir = File.join(dir_path, "#{File.basename(item)}_" + Time.now.to_s.gsub!(/:/, '-'))
         FileUtils.mkdir_p temp_dir
 
-        archs.each { |arch| 
+        archs.each { |arch|
           suffix = File.extname(item)
           arch_dir = File.join(temp_dir, "#{arch}")
           FileUtils.mkdir_p arch_dir
@@ -242,7 +270,7 @@ end
 
 # @see https://stackoverflow.com/a/29166478
 time = Benchmark.measure {
-  MsgSendSelectorStubCheckUtility.new.run
+  CheckSymbolForStaticLibraryUtility.new.run
 }
 
 puts "Completed with #{time.real.duration}.".magenta
