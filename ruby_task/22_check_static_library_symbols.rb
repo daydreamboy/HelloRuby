@@ -21,55 +21,84 @@ require 'fileutils'
 require_relative '../ruby_tool/ruby_tools'
 require_relative '../ruby_tool/ext_numeric'
 
-$default_ext_list = %w(
-a
-framework
-)
+$static_library_list = []
+
+class WCStaticLibrary
+  attr_accessor :path
+  attr_accessor :object_files
+end
+
+class WCObjectFile
+  # The path for object file
+  attr_accessor :path
+  # The name for object file
+  attr_accessor :name
+  # The symbol list in object file
+  attr_accessor :symbols
+end
+
+class WCSymbol
+  # raw line for single symbol
+  attr_accessor :line
+
+  # The four parts: address<space>segment_info<space>attribute<space>symbol_name
+  attr_accessor :address
+  attr_accessor :segment
+  attr_accessor :attribute
+  attr_accessor :name
+
+  ##
+  # Check symbol if undefined
+  #
+  def is_undefined?
+    if @segment.nil?
+      return false
+    end
+
+    return @segment == "undefined"
+  end
+end
 
 class CheckSymbolForStaticLibraryUtility
   attr_accessor :cmd_parser
-  attr_accessor :cmd_options
 
   attr_accessor :debug
   attr_accessor :verbose
+  attr_accessor :conflict
+  attr_accessor :dependency
 
   # initialize for new
   def initialize
-    self.cmd_options = {}
-
     self.cmd_parser = OptionParser.new do |opts|
       opts.banner = "Usage: #{__FILE__} PATH/TO/FOLDER [options]"
       opts.separator ""
       opts.separator "在指定目录nm搜索特定的符号"
       opts.separator "Examples:"
-      opts.separator "ruby #{__FILE__ } PATH/TO/FOLDER -s 'OBJC_CLASS_$_XXX' -v"
-      opts.separator "ruby #{__FILE__ } PATH/TO/FOLDER -s XXX -d"
+      opts.separator "ruby #{__FILE__ } PATH/TO/FOLDER -v"
+      opts.separator "ruby #{__FILE__ } PATH/TO/FOLDER -d"
 
       opts.on("-v", "--[no-]verbose", "Run verbosely") do |toggle|
-        self.cmd_options[:verbose] = toggle
+        self.verbose = toggle
       end
 
       opts.on("-d", "--[no-]debug", "Run in debug mode") do |toggle|
-        self.cmd_options[:debug] = toggle
+        self.debug = toggle
       end
 
-      # opts.on("-i", "--include_exts suffix1,suffix2,...", Array, "included files with ext") do |include_list|
-      #   self.cmd_options[:include_list] = include_list
-      # end
-      #
-      # opts.on("-e", "--exclude_exts suffix1,suffix2,...", Array, "excluded files with ext") do |exclude_list|
-      #   self.cmd_options[:exclude_list] = exclude_list
-      # end
-      #
-      # opts.on("-s", "--symbol_list symbol1,symbol2,...", Array, "the symbols to search") do |symbol_list|
-      #   self.cmd_options[:symbol_list] = symbol_list
-      # end
+      opts.on("-c", "--[no-]conflict", "Check symbol conflict") do |toggle|
+        self.conflict = toggle
+      end
+
+      opts.on("-D", "--dependency", "Check symbol dependency") do |toggle|
+        self.dependency = toggle
+      end
     end
   end
 
   def check_if_static_library(file_path)
     command = "lipo -info \"#{file_path}\" 2>/dev/null"
-    puts command.cyan if self.debug
+    # puts command.cyan if self.debug
+    puts command.cyan if self.verbose
 
     stdout, stderr, status = Open3.capture3(command)
 
@@ -85,6 +114,7 @@ class CheckSymbolForStaticLibraryUtility
       return false
     end
 
+    # puts stdout.cyan if self.debug
     puts stdout.cyan if self.verbose
 
     if stdout.include?("fat file") or stdout.include?("Non-fat file")
@@ -94,82 +124,14 @@ class CheckSymbolForStaticLibraryUtility
     end
   end
 
-  def parse_arch_of_library(file_path)
-    command = "lipo -info \"#{file_path}\""
-    puts command.cyan if self.debug
-
-    stdout, stderr, status = Open3.capture3(command)
-    if status.success? && !stdout.empty?
-      puts stdout.cyan if self.verbose
-
-      index = stdout.rindex(":")
-      if index.nil?
-        return []
-      end
-
-      str = stdout.slice(index+1...).strip!
-      archs = str.split(" ")
-
-      Log.d(archs.to_s()) if self.debug
-
-      return archs
-    else
-      puts "#{stderr}".red !stderr.empty?
-
-      return []
-    end
-  end
-
-  def create_single_arch_library(file_path, arch, output)
-    #lipo XXXModule -thin arm64 -output XXXModule_arm64.a
-    command = "lipo \"#{file_path}\" -thin #{arch} -output \"#{output}\""
-    puts command.cyan if self.debug
-
-    stdout, stderr, status = Open3.capture3(command)
-    if status.success?
-      return true
-    else
-      puts "#{stderr}".red if !stderr.empty?
-
-      return false
-    end
-  end
-
-  def extract_object_file(file_path)
-    #ar x XXXModule_arm64.a
-    command = "cd \"#{File.dirname(file_path)}\"; ar x \"#{File.basename(file_path)}\""
-    puts command.cyan if self.debug
-
-    stdout, stderr, status = Open3.capture3(command)
-    if status.success?
-      return true
-    else
-      puts "#{stderr}".red if !stderr.empty?
-
-      return false
-    end
-  end
-
-  def test_object_file(file_path)
-    # nm YYY.o | grep -e "_objc_msgSend\\$"
-    command = "nm \"#{file_path}\" | grep -e \"_objc_msgSend\\\\$\""
-    puts command.cyan if self.debug
-
-    stdout, stderr, status = Open3.capture3(command)
-    if status.success?
-      puts "#{stdout}"
-      return true
-    else
-      puts "#{stderr}".red if !stderr.empty?
-
-      return false
-    end
-  end
-
   ##
   # Find static library binary files in framework
   #
-  # @return [Void] Get path list for
+  # @param [String] framework_path
+  #       The path of framework
+  #
+  # @return [Array] The path list for
+  #
   def find_static_library_in_framework(framework_path)
     file_ext = File.extname(framework_path).delete('.')
     if file_ext != 'framework'
@@ -187,6 +149,116 @@ class CheckSymbolForStaticLibraryUtility
     return path_list
   end
 
+  def check_symbol_conflict
+    $static_library_list.each do |static_library|
+      Log.v("[Conflict] checking #{static_library.path}") if self.verbose
+    end
+  end
+
+  def process_symbol(line)
+    if line.strip.length == 0
+      return nil
+    end
+
+    # symbol line format:
+    # - defined symbol
+    # address<space>(segment)<space>attribute<space>name
+    # - undefined symbol
+    # <space><space>(undefined)<space>attribute<space>name
+    symbol = WCSymbol.new
+    symbol.line = line
+
+    symbol.address = line.index(' ').nil? ? "" : line[0..line.index(' ')].strip
+    symbol.segment = (line.index('(').nil? || line.rindex(')').nil?) ? "" : line[line.index('(')+1..line.rindex(')')-1]
+
+    Log.d("line: #{line}") if self.debug
+    if line.include?("_block_invoke")
+      separator = '___'
+    elsif line.include?("+[") or line.include?("-[")
+      separator = line.include?("+[") ? '+[' : '-['
+    else
+      separator = ' '
+    end
+    symbol.attribute = (line.rindex(')').nil? || line.rindex(separator).nil?) ? "" : line[line.rindex(')')+1..line.rindex(separator)].strip
+    symbol.name = line.rindex(separator).nil? ? "" : line[line.rindex(separator)..-1].strip
+
+    return symbol
+  end
+
+  def process_object_file(path)
+    command = "nm -m #{path}"
+    puts command.cyan if self.debug
+
+    stdout, stderr, status = Open3.capture3(command)
+    if status.success?
+      output = "#{stdout}"
+      object_file_list = []
+      current_object = nil
+      output.each_line do |line|
+        # Note: remove \n of each line
+        line = line.chomp
+
+        if line.strip.length == 0
+          next
+        end
+
+        # This is header line
+        if line.include?(".o:") or line.include?(".o):")
+          # Log.v("Process new object file: #{line}") if self.verbose
+          current_object = WCObjectFile.new
+          current_object.name = line.include?("(") ? line.split('(')[1].gsub(/\A[():]+|[():]+\z/, '') : line.strip
+          current_object.path = line.include?("(") ? line.split('(').first.strip : '.'
+          current_object.symbols = []
+          object_file_list.append(current_object)
+        else
+          if not current_object.nil?
+            symbol = process_symbol(line)
+            current_object.symbols.append(symbol) if not symbol.nil?
+            Log.v("add symbol: #{symbol.name}|#{symbol.segment}|#{symbol.attribute}|#{symbol.address}|#{symbol.is_undefined?}|") if self.debug
+          else
+            Log.e("Should never hit this line")
+            exit(1)
+          end
+        end
+      end
+      # Log.d("#{stdout}")  if self.debug
+      return object_file_list
+    else
+      puts "#{stderr}".red if !stderr.empty?
+      return nil
+    end
+  end
+
+  def process_static_library(path)
+    static_library = WCStaticLibrary.new
+    static_library.path = path
+    static_library.object_files = process_object_file(path)
+    $static_library_list.append(static_library)
+  end
+
+  def traverse_all_files(dir_path, &block)
+    raise ArgumentError, "Block is required" unless block_given?
+
+    Dir.glob(dir_path + '/**/*') do |item|
+      # Log.d("item: #{item}")
+
+      next if item == '.' or item == '..'
+      next if File.directory?(item)
+
+      if File.symlink?(item)
+        linked_item = File.readlink(item)
+        if File.directory?(linked_item)
+          traverse_all_files(linked_item, &block)
+        end
+      end
+
+      if File.file?(item)
+        Log.d("item: #{item}")
+        block.call(item) if block_given?
+      end
+    end
+  end
+
   # parse command line
   def run
     self.cmd_parser.parse!
@@ -198,71 +270,42 @@ class CheckSymbolForStaticLibraryUtility
 
     dir_path = ARGV[0]
 
-    ext_list = $default_ext_list
-    self.debug = self.cmd_options[:debug]
-    self.verbose = self.cmd_options[:verbose]
-
     if !File.directory?(dir_path)
       puts "[Error] #{dir_path} is not a directory!"
       return
     end
 
-    # Note: only search target under the one level of the dir_path
-    Dir.glob(dir_path + '/*') do |item|
-      next if item == '.' or item == '..'
-
-      # @see https://stackoverflow.com/questions/16902083/exclude-the-from-a-file-extension-in-rails
+    traverse_all_files(dir_path + '/**/*') do |item|
       file_ext = File.extname(item).delete('.')
-      if ext_list.empty? or file_ext == ''
-        next
+
+      if file_ext == 'a'
+        process_static_library(item)
+      elsif file_ext == '' and check_if_static_library(item)
+        process_static_library(item)
       end
+    end
 
-      if file_ext == 'a' or file_ext == 'framework'
-        item = File.join(item, File.basename(item, File.extname(item))) if file_ext == 'framework'
-        result = check_if_static_library(item)
-        Log.d(result) if self.debug
+    # Dir.glob(dir_path + '/**/*') do |item|
+    #   Log.d("item: #{item}")
+    #
+    #   next if item == '.' or item == '..'
+    #   next if File.directory?(item)
+    #
+    #   Log.v("item: #{item}")
+    #
+    #   file_ext = File.extname(item).delete('.')
+    #
+    #   if file_ext == 'a'
+    #     process_static_library(item)
+    #   elsif file_ext == '' and check_if_static_library(item)
+    #     process_static_library(item)
+    #   end
+    # end
 
-        if result == false
-          next
-        end
+    dump_object($static_library_list.length)
 
-        archs = parse_arch_of_library(item)
-        if archs.empty?
-          next
-        end
-
-        temp_dir = File.join(dir_path, "#{File.basename(item)}_" + Time.now.to_s.gsub!(/:/, '-'))
-        FileUtils.mkdir_p temp_dir
-
-        archs.each { |arch|
-          suffix = File.extname(item)
-          arch_dir = File.join(temp_dir, "#{arch}")
-          FileUtils.mkdir_p arch_dir
-          output = File.join(arch_dir, File.basename(item, suffix) + "_#{arch}" + suffix)
-          result = create_single_arch_library(item, arch, output)
-          if result == false
-            next
-          end
-
-          result = extract_object_file(output)
-          if result == false
-            next
-          end
-
-          puts "#{File.basename(item)} (#{arch})"
-
-          Dir.glob(arch_dir + '/*.o').sort().each do |object_file|
-            next if object_file == '.' or object_file == '..'
-
-            puts "#{File.basename(object_file)} (#{arch}):"
-            test_object_file(object_file)
-          end
-
-          puts "------"
-        }
-
-      end
-
+    if self.conflict
+      check_symbol_conflict()
     end
 
   end

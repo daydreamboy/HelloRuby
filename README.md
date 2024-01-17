@@ -6,69 +6,19 @@
 
 根据Ruby官方文档[Ruby Syntax](https://ruby-doc.org/core-2.7.1/doc/syntax_rdoc.html)这一节的分类，对应本文的前11个章节。
 
-* Literals 
-
-介绍Ruby的相关字面常量，例如Number、String、Array、Hash等
-
-
-
-* Assignment 
-
-介绍Ruby的赋值以及变量定义的语法
-
-
-
-* Control Expressions 
-
-介绍Ruby的控制语句，例如`if`, `unless`, `while`, `until`, `for`, `break`, `next`, `redo`等
-
-
-
-* Methods 
-
-介绍Ruby的方法以及方法参数
-
-
-
-* Calling Methods 
-
-介绍如何调用Ruby的方法
-
-
-
-* Modules and Classes 
-
-介绍Ruby的Module和Class
-
-
-
-* Exceptions 
-
-介绍Ruby的异常处理
-
-
-
-* Precedence 
-
-介绍Ruby的操作符优先级
-
-
-
-* Refinements 
-
-介绍Ruby的实验性特性
-
-
-
-* Miscellaneous 
-
-介绍Ruby相关杂项，例如`alias`, `undef`, `BEGIN`, `END`等
-
-
-
-* Comments 
-
-介绍Ruby的行注释、块注释
+| 章节                    | 原文                                                         | 释义                                                         |
+| ----------------------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| **Literals**            | Numbers, Strings, Arrays, Hashes, etc.                       | 介绍Ruby的相关字面常量，例如Number、String、Array、Hash等    |
+| **Assignment**          | Assignment and variables                                     | 介绍Ruby的赋值以及变量定义的语法                             |
+| **Control Expressions** | `if`, `unless`, `while`, `until`, `for`, `break`, `next`, `redo` | 介绍Ruby的控制语句，例如`if`, `unless`, `while`, `until`, `for`, `break`, `next`, `redo`等 |
+| **Methods**             | Method and method argument syntax                            | 介绍Ruby的方法以及方法参数                                   |
+| **Calling Methods**     | How to call a method (or send a message to a method)         | 介绍如何调用Ruby的方法                                       |
+| **Modules and Classes** | Creating modules and classes including inheritance           | 介绍Ruby的Module和Class                                      |
+| **Exceptions**          | Exception handling syntax                                    | 介绍Ruby的异常处理                                           |
+| **Precedence**          | Precedence of ruby operators                                 | 介绍Ruby的操作符优先级                                       |
+| **Refinements**         | Use and behavior of the experimental refinements feature     | 介绍Ruby的实验性特性                                         |
+| **Miscellaneous**       | `alias`, `undef`, `BEGIN`, `END`                             | 介绍Ruby相关杂项，例如`alias`, `undef`, `BEGIN`, `END`等     |
+| **Comments**            | Line and block code comments                                 | 介绍Ruby的行注释、块注释                                     |
 
 
 
@@ -264,7 +214,28 @@ MatchData的string方法返回原始需要匹配的字符串，而to_s方法返�
 
 ## 2、Assignment
 
-### (1) `||=`条件赋值操作符
+### (1) 变量
+
+| 变量类型 | 示例用法           |
+| -------- | ------------------ |
+| 全局变量 | `$gloabl_variable` |
+| 实例变量 | `@instace_var`     |
+| 类变量   | `@@class_var`      |
+
+
+
+#### a. 属性修饰符
+
+* `attr_accessor`是对以下两个方法的简写：
+
+- `attr_reader`: 创建一个读取器方法用于返回实例变量的值。
+- `attr_writer`: 创建一个写入器方法用于设置实例变量的值
+
+
+
+
+
+### (2) `||=`条件赋值操作符
 
 `||=`是一个条件赋值操作符(conditional assignment operator)，有一个类似||的短路逻辑。
 
