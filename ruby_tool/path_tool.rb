@@ -47,18 +47,22 @@ class PathTool
   def self.traverse_all_files(dir_path, &block)
     raise ArgumentError, "Block is required" unless block_given?
 
+    seen = {}
     Dir.glob(dir_path + '/**/*') do |item|
       next if item == '.' or item == '..'
+      next if seen[item]
 
       # Note: check soft link file/folder
       if File.symlink?(item)
         item = File.readlink(item)
+
         if File.directory?(item)
           traverse_all_files(item, &block)
         end
       end
 
       if File.file?(item)
+        seen[item] = true
         block.call(item) if block_given?
       end
     end

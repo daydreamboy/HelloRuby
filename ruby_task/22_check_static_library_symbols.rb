@@ -112,7 +112,7 @@ class WCSymbol
       return false
     end
 
-    return !(@attribute.include?("non-external") or @attribute.include?("private"))
+    return !(@attribute.include?("non-external") or @attribute.include?("weak private external"))
   end
 end
 
@@ -285,6 +285,7 @@ class CheckSymbolForStaticLibraryUtility
       symbol_list.each do |symbol|
         puts "- #{symbol.object_file.static_library.path} (#{symbol.object_file.name})".red
       end
+      puts ""
     end
   end
 
