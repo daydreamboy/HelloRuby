@@ -117,6 +117,7 @@ class CheckSymbolForStaticLibraryUtility
   attr_accessor :verbose
   attr_accessor :conflict
   attr_accessor :dependency
+  attr_accessor :arch
 
   # initialize for new
   def initialize
@@ -143,11 +144,15 @@ class CheckSymbolForStaticLibraryUtility
       opts.on("-D", "--dependency", "Check symbol dependency") do |toggle|
         self.dependency = toggle
       end
+
+      opts.on("-aArchFlag", "--arch=ArchFlag", "Arch type. Default is arm64") do |value|
+        self.arch = value
+      end
     end
   end
 
   def check_if_static_library(file_path)
-    command = "lipo -info \"#{file_path}\" 2>/dev/null"
+    command = "file \"#{file_path}\" 2>/dev/null"
     puts command.cyan if self.debug
 
     stdout, stderr, status = Open3.capture3(command)
@@ -166,10 +171,36 @@ class CheckSymbolForStaticLibraryUtility
 
     puts stdout.cyan if self.debug
 
-    if stdout.include?("fat file") or stdout.include?("Non-fat file")
+    if stdout.include?("current ar archive")
       return true
     else
       return false
+    end
+  end
+
+  def parse_arch_of_static_library(file_path)
+    command = "lipo -info \"#{file_path}\""
+    puts command.cyan if self.debug
+
+    stdout, stderr, status = Open3.capture3(command)
+    if status.success? && !stdout.empty?
+      puts stdout.cyan if self.debug
+
+      index = stdout.rindex(":")
+      if index.nil?
+        return []
+      end
+
+      str = stdout.slice(index+1...).strip!
+      archs = str.split(" ")
+
+      Log.d(archs.to_s()) if self.debug
+
+      return archs
+    else
+      puts "#{stderr}".red !stderr.empty?
+
+      return []
     end
   end
 
@@ -252,15 +283,21 @@ class CheckSymbolForStaticLibraryUtility
     return symbol
   end
 
-  def process_object_file(path)
-    command = "nm -m #{path}"
+  def process_object_file(static_library_path)
+    arch = self.arch.nil? ? "arm64" : self.arch
+    arch_list = parse_arch_of_static_library(static_library_path)
+    if not arch_list.include?(arch)
+      Log.w("#{static_library_path} not contains #{arch}")
+      return []
+    end
+    command = "nm -arch #{arch} -m #{static_library_path}"
     puts command.cyan if self.debug
 
     stdout, stderr, status = Open3.capture3(command)
     if status.success?
       output = "#{stdout}"
-      object_file_list = []
       current_object = nil
+      object_file_list = []
       output.each_line do |line|
         # Note: remove \n of each line
         line = line.chomp
@@ -284,6 +321,9 @@ class CheckSymbolForStaticLibraryUtility
             Log.v("add symbol: #{symbol.name}|#{symbol.segment}|#{symbol.attribute}|#{symbol.address}|#{symbol.is_undefined?}|") if self.debug
           else
             Log.e("Should never hit this line")
+            Log.e("current line: #{line}")
+            Log.e("current command: #{command}")
+            Log.e("current output: #{output[0..500]}")
             exit(1)
           end
         end
@@ -292,7 +332,7 @@ class CheckSymbolForStaticLibraryUtility
       return object_file_list
     else
       puts "#{stderr}".red if !stderr.empty?
-      return nil
+      return []
     end
   end
 
