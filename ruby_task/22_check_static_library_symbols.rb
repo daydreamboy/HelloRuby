@@ -35,6 +35,49 @@ class WCObjectFile
   attr_accessor :name
   # The symbol list in object file
   attr_accessor :symbols
+
+  def defined_symbols
+    symbol_list = []
+    @symbols.each do |symbol|
+      if not symbol.is_undefined?
+        symbol_list.append(symbol)
+      end
+    end
+    symbol_list
+  end
+
+  def defined_external_symbols
+    symbol_list = []
+    @symbols.each do |symbol|
+      if not symbol.is_undefined? and symbol.is_external?
+        symbol_list.append(symbol)
+      end
+    end
+    symbol_list
+  end
+
+  def undefined_symbols
+    symbol_list = []
+    @symbols.each do |symbol|
+      if symbol.is_undefined?
+        symbol_list.append(symbol)
+      end
+    end
+    symbol_list
+  end
+
+  ##
+  # Lookup symbol by name in defined external symbol set
+  #
+  def contains_defined_external_symbol_name?(name)
+    defined_external_symbols = self.defined_external_symbols
+    defined_external_symbols.each do |symbol|
+      if symbol.name == name
+        return true
+      end
+    end
+    return false
+  end
 end
 
 class WCSymbol
@@ -56,6 +99,14 @@ class WCSymbol
     end
 
     return @segment == "undefined"
+  end
+
+  def is_external?
+    if @attribute.nil?
+      return false
+    end
+
+    return !(@attribute.include?("non-external") or @attribute.include?("private"))
   end
 end
 
@@ -97,8 +148,7 @@ class CheckSymbolForStaticLibraryUtility
 
   def check_if_static_library(file_path)
     command = "lipo -info \"#{file_path}\" 2>/dev/null"
-    # puts command.cyan if self.debug
-    puts command.cyan if self.verbose
+    puts command.cyan if self.debug
 
     stdout, stderr, status = Open3.capture3(command)
 
@@ -114,8 +164,7 @@ class CheckSymbolForStaticLibraryUtility
       return false
     end
 
-    # puts stdout.cyan if self.debug
-    puts stdout.cyan if self.verbose
+    puts stdout.cyan if self.debug
 
     if stdout.include?("fat file") or stdout.include?("Non-fat file")
       return true
@@ -150,8 +199,26 @@ class CheckSymbolForStaticLibraryUtility
   end
 
   def check_symbol_conflict
-    $static_library_list.each do |static_library|
-      Log.v("[Conflict] checking #{static_library.path}") if self.verbose
+    $static_library_list.each_with_index do |static_library1, index1|
+      Log.v("[Conflict] checking #{static_library1.path}") if self.verbose
+
+      static_library1.object_files.each do |object_file1|
+        Log.v("[Conflict] checking object #{object_file1.name}") if self.verbose
+        defined_external_symbols = object_file1.defined_external_symbols
+        defined_external_symbols.each do |symbol|
+          $static_library_list.each_with_index do |static_library2, index2|
+            next if index2 <= index1
+
+            static_library2.object_files.each do |object_file2|
+              if object_file2.contains_defined_external_symbol_name?(symbol.name)
+                puts "duplicated symbol #{symbol.name} both in:".red
+                puts "- #{static_library1.path} (#{object_file1.name})".red
+                puts "- #{static_library2.path} (#{object_file2.name})".red
+              end
+            end
+          end
+        end
+      end
     end
   end
 
@@ -236,29 +303,6 @@ class CheckSymbolForStaticLibraryUtility
     $static_library_list.append(static_library)
   end
 
-  def traverse_all_files(dir_path, &block)
-    raise ArgumentError, "Block is required" unless block_given?
-
-    Dir.glob(dir_path + '/**/*') do |item|
-      # Log.d("item: #{item}")
-
-      next if item == '.' or item == '..'
-      next if File.directory?(item)
-
-      if File.symlink?(item)
-        linked_item = File.readlink(item)
-        if File.directory?(linked_item)
-          traverse_all_files(linked_item, &block)
-        end
-      end
-
-      if File.file?(item)
-        Log.d("item: #{item}")
-        block.call(item) if block_given?
-      end
-    end
-  end
-
   # parse command line
   def run
     self.cmd_parser.parse!
@@ -275,7 +319,7 @@ class CheckSymbolForStaticLibraryUtility
       return
     end
 
-    traverse_all_files(dir_path + '/**/*') do |item|
+    PathTool.traverse_all_files(dir_path) do |item|
       file_ext = File.extname(item).delete('.')
 
       if file_ext == 'a'
@@ -285,24 +329,7 @@ class CheckSymbolForStaticLibraryUtility
       end
     end
 
-    # Dir.glob(dir_path + '/**/*') do |item|
-    #   Log.d("item: #{item}")
-    #
-    #   next if item == '.' or item == '..'
-    #   next if File.directory?(item)
-    #
-    #   Log.v("item: #{item}")
-    #
-    #   file_ext = File.extname(item).delete('.')
-    #
-    #   if file_ext == 'a'
-    #     process_static_library(item)
-    #   elsif file_ext == '' and check_if_static_library(item)
-    #     process_static_library(item)
-    #   end
-    # end
-
-    dump_object($static_library_list.length)
+    # dump_object($static_library_list.length)
 
     if self.conflict
       check_symbol_conflict()

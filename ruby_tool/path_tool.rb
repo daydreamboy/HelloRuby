@@ -35,5 +35,33 @@ class PathTool
       return File.expand_path(path)
     end
   end
+
+  ##
+  # Traverse all file under specific folder path
+  #
+  # @param [String] dir_path The folder path
+  # @param [Block] block The callback
+  #
+  # @note This method not considers alias file/folder
+  #
+  def self.traverse_all_files(dir_path, &block)
+    raise ArgumentError, "Block is required" unless block_given?
+
+    Dir.glob(dir_path + '/**/*') do |item|
+      next if item == '.' or item == '..'
+
+      # Note: check soft link file/folder
+      if File.symlink?(item)
+        item = File.readlink(item)
+        if File.directory?(item)
+          traverse_all_files(item, &block)
+        end
+      end
+
+      if File.file?(item)
+        block.call(item) if block_given?
+      end
+    end
+  end
 end
 
