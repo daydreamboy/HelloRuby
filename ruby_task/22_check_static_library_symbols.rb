@@ -400,17 +400,20 @@ class CheckSymbolForStaticLibraryUtility
       return
     end
 
+    count = 0
     PathTool.traverse_all_files(dir_path) do |item|
       file_ext = File.extname(item).delete('.')
 
       if file_ext == 'a'
+        count = count + 1
         process_static_library(item)
       elsif file_ext == '' and check_if_static_library(item)
+        count = count + 1
         process_static_library(item)
       end
     end
 
-    # dump_object($static_library_list.length)
+    Log.i("Finish parsing all symbols for #{count} static libraries")
 
     if self.conflict
       check_symbol_conflict()
