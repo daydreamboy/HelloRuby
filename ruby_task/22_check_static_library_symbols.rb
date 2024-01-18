@@ -36,6 +36,9 @@ class WCObjectFile
   # The symbol list in object file
   attr_accessor :symbols
 
+  # Object relation
+  attr_accessor :static_library
+
   def defined_symbols
     symbol_list = []
     @symbols.each do |symbol|
@@ -89,6 +92,9 @@ class WCSymbol
   attr_accessor :segment
   attr_accessor :attribute
   attr_accessor :name
+
+  # Object relation
+  attr_accessor :object_file
 
   ##
   # Check symbol if undefined
@@ -230,6 +236,8 @@ class CheckSymbolForStaticLibraryUtility
   end
 
   def check_symbol_conflict
+    # Version1: too slow when Pods folder has 500+ pods
+=begin
     $static_library_list.each_with_index do |static_library1, index1|
       Log.v("[Conflict] checking #{static_library1.path}") if self.verbose
 
@@ -249,6 +257,33 @@ class CheckSymbolForStaticLibraryUtility
             end
           end
         end
+      end
+    end
+=end
+
+    symbol_dict = {}
+    $static_library_list.each do |static_library|
+      Log.v("[Conflict] checking #{static_library.path}") if self.verbose
+
+      static_library.object_files.each do |object_file|
+        Log.v("[Conflict] checking object #{object_file.name}") if self.verbose
+        defined_external_symbols = object_file.defined_external_symbols
+        defined_external_symbols.each do |symbol|
+          if symbol_dict[symbol.name].nil?
+            symbol_dict[symbol.name] = []
+          end
+
+          symbol_dict[symbol.name].append(symbol)
+        end
+      end
+    end
+
+    symbol_dict.each do |symbol_name, symbol_list|
+      next if symbol_list.length < 2
+
+      puts "duplicated symbol #{symbol_name} both in:".red
+      symbol_list.each do |symbol|
+        puts "- #{symbol.object_file.static_library.path} (#{symbol.object_file.name})".red
       end
     end
   end
@@ -283,7 +318,7 @@ class CheckSymbolForStaticLibraryUtility
     return symbol
   end
 
-  def process_object_file(static_library_path)
+  def process_object_file(static_library_path, static_library_object)
     arch = self.arch.nil? ? "arm64" : self.arch
     arch_list = parse_arch_of_static_library(static_library_path)
     if not arch_list.include?(arch)
@@ -313,12 +348,18 @@ class CheckSymbolForStaticLibraryUtility
           current_object.name = line.include?("(") ? line.split('(')[1].gsub(/\A[():]+|[():]+\z/, '') : line.strip
           current_object.path = line.include?("(") ? line.split('(').first.strip : '.'
           current_object.symbols = []
+          current_object.static_library = static_library_object
           object_file_list.append(current_object)
         else
           if not current_object.nil?
             symbol = process_symbol(line)
-            current_object.symbols.append(symbol) if not symbol.nil?
-            Log.v("add symbol: #{symbol.name}|#{symbol.segment}|#{symbol.attribute}|#{symbol.address}|#{symbol.is_undefined?}|") if self.debug
+            if not symbol.nil?
+              symbol.object_file = current_object
+              current_object.symbols.append(symbol)
+              Log.v("add symbol: #{symbol.name}|#{symbol.segment}|#{symbol.attribute}|#{symbol.address}|#{symbol.is_undefined?}|") if self.debug
+            else
+              Log.w("not create symbol for line: #{line}")
+            end
           else
             Log.e("Should never hit this line")
             Log.e("current line: #{line}")
@@ -328,7 +369,7 @@ class CheckSymbolForStaticLibraryUtility
           end
         end
       end
-      # Log.d("#{stdout}")  if self.debug
+
       return object_file_list
     else
       puts "#{stderr}".red if !stderr.empty?
@@ -339,7 +380,7 @@ class CheckSymbolForStaticLibraryUtility
   def process_static_library(path)
     static_library = WCStaticLibrary.new
     static_library.path = path
-    static_library.object_files = process_object_file(path)
+    static_library.object_files = process_object_file(path, static_library)
     $static_library_list.append(static_library)
   end
 
