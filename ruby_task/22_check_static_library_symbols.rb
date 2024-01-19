@@ -112,7 +112,10 @@ class WCSymbol
       return false
     end
 
-    return !(@attribute.include?("non-external") or @attribute.include?("weak private external") or @attribute.include?("weak external automatically hidden"))
+    return !(@attribute.include?("non-external") or
+      @attribute.include?("weak private external") or
+      @attribute.include?("weak external automatically hidden") or
+      @attribute.include?("weak external"))
   end
 end
 
@@ -296,7 +299,7 @@ class CheckSymbolForStaticLibraryUtility
     symbol_dict.each do |symbol_name, symbol_list|
       next if symbol_list.length < 2
 
-      puts_red "duplicated symbol #{symbol_name} in:", self.colored
+      puts_red "duplicate symbol '#{symbol_name}' in:", self.colored
       symbol_list.each do |symbol|
         puts_red "- #{symbol.object_file.static_library.path} (#{symbol.object_file.name})", self.colored
       end
@@ -321,15 +324,29 @@ class CheckSymbolForStaticLibraryUtility
     symbol.segment = (line.index('(').nil? || line.rindex(')').nil?) ? "" : line[line.index('(')+1..line.rindex(')')-1]
 
     Log.d("line: #{line}") if self.debug
-    if line.include?("_block_invoke")
+    # Note: block symbols
+    if line.include?("_block_invoke") and line.include?("___")
       separator = '___'
-    elsif line.include?("+[") or line.include?("-[")
+    # Note: OC method symbols
+    elsif line.include?(" +[") or line.include?(" -[")
       separator = line.include?("+[") ? '+[' : '-['
+    # Note: "000000000000557e (__TEXT,__cstring) non-external l___PRETTY_FUNCTION__.__57-[NSItemProvider(XXXUtils) yy_loadOriginalFileURL]_block_invoke"
+    elsif line.include?(" l___")
+      separator = 'l___'
     else
       separator = ' '
     end
     symbol.attribute = (line.rindex(')').nil? || line.rindex(separator).nil?) ? "" : line[line.rindex(')')+1..line.rindex(separator)].strip
     symbol.name = line.rindex(separator).nil? ? "" : line[line.rindex(separator)..-1].strip
+
+    # if symbol.name.include?("dt_loadOriginalFileURL")
+    #   Log.d(line)
+    #   Log.d(symbol.name)
+    #   Log.d(symbol.attribute)
+    #   Log.d(symbol.address)
+    #   Log.d(symbol.segment)
+    #   puts ""
+    # end
 
     return symbol
   end

@@ -48,7 +48,7 @@ class PathTool
     raise ArgumentError, "Block is required" unless block_given?
 
     seen = {}
-    Dir.glob(dir_path + '/**/*') do |item|
+    Dir.glob(File.join(dir_path, '/**/*')) do |item|
       next if item == '.' or item == '..'
       next if seen[item]
 
