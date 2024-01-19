@@ -9,3 +9,5 @@ Log.d('This is a Debug without dump mode', false)
 Log.e('This is an Error')
 Log.w('This is a Warning')
 Log.v('This is a Verbose')
+
+Log.v('This is a Verbose without color', true, false)

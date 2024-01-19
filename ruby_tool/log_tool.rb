@@ -36,15 +36,19 @@ class Log
 
   ##
   # Verbose
-  def self.v(msg, debug = true)
+  def self.v(msg, debug = true, colored = true)
     if debug
-      puts "[Verbose] #{msg}".blue
+      if colored
+        puts "[Verbose] #{msg}".blue
+      else
+        puts "[Verbose] #{msg}"
+      end
     end
   end
 
   ##
   # Debug
-  def self.d(arg, dump_mode = true, debug = true)
+  def self.d(arg, dump_mode = true, debug = true, colored = true)
     # @@logger.debug(msg)
     if debug
       loc = caller_locations.first
@@ -72,37 +76,56 @@ class Log
       lineNo = loc.lineno
 
       if dump_mode
-        puts "[Debug] #{filename}:#{lineNo}: #{arg_name_str} = (#{arg.class}) #{arg.inspect}".cyan
+        if colored
+          puts "[Debug] #{filename}:#{lineNo}: #{arg_name_str} = (#{arg.class}) #{arg.inspect}".cyan
+        else
+          puts "[Debug] #{filename}:#{lineNo}: #{arg_name_str} = (#{arg.class}) #{arg.inspect}"
+        end
       else
-        puts "[Debug] #{filename}:#{lineNo}: #{arg}".cyan
+        if colored
+          puts "[Debug] #{filename}:#{lineNo}: #{arg}".cyan
+        else
+          puts "[Debug] #{filename}:#{lineNo}: #{arg}"
+        end
       end
     end
   end
 
   ##
   # Warning
-  def self.w(msg, debug = true)
+  def self.w(msg, debug = true, colored = true)
     # @@logger.warn(msg)
     if debug
-      puts "[Warning] #{msg}".yellow
+      if colored
+        puts "[Warning] #{msg}".yellow
+      else
+        puts "[Warning] #{msg}"
+      end
     end
-
   end
 
   ##
   # Error
-  def self.e(msg, debug = true)
+  def self.e(msg, debug = true, colored = true)
     # @@logger.error(msg)
     if debug
-      puts "[Error] #{msg}".red
+      if colored
+        puts "[Error] #{msg}".red
+      else
+        puts "[Error] #{msg}"
+      end
     end
   end
 
   ##
   # Timing
-  def self.t(msg, debug = true)
+  def self.t(msg, debug = true, colored = true)
     if debug
-      puts "[Measure] #{msg}".magenta
+      if colored
+        puts "[Measure] #{msg}".magenta
+      else
+        puts "[Measure] #{msg}"
+      end
     end
   end
 end

@@ -112,7 +112,7 @@ class WCSymbol
       return false
     end
 
-    return !(@attribute.include?("non-external") or @attribute.include?("weak private external"))
+    return !(@attribute.include?("non-external") or @attribute.include?("weak private external") or @attribute.include?("weak external automatically hidden"))
   end
 end
 
@@ -124,9 +124,12 @@ class CheckSymbolForStaticLibraryUtility
   attr_accessor :conflict
   attr_accessor :dependency
   attr_accessor :arch
+  attr_accessor :colored
 
   # initialize for new
   def initialize
+    self.colored = true
+
     self.cmd_parser = OptionParser.new do |opts|
       opts.banner = "Usage: #{__FILE__} PATH/TO/FOLDER [options]"
       opts.separator ""
@@ -154,6 +157,18 @@ class CheckSymbolForStaticLibraryUtility
       opts.on("-aArchFlag", "--arch=ArchFlag", "Arch type. Default is arm64") do |value|
         self.arch = value
       end
+
+      opts.on("-C","--[no-]color", "Run in debug mode") do |toggle|
+        self.colored = toggle
+      end
+    end
+  end
+
+  def puts_red(msg, colored = true)
+    if colored
+      puts "#{msg}".red
+    else
+      puts"#{msg}"
     end
   end
 
@@ -200,7 +215,7 @@ class CheckSymbolForStaticLibraryUtility
       str = stdout.slice(index+1...).strip!
       archs = str.split(" ")
 
-      Log.d(archs.to_s()) if self.debug
+      #Log.d(archs.to_s()) if self.debug
 
       return archs
     else
@@ -281,9 +296,9 @@ class CheckSymbolForStaticLibraryUtility
     symbol_dict.each do |symbol_name, symbol_list|
       next if symbol_list.length < 2
 
-      puts "duplicated symbol #{symbol_name} both in:".red
+      puts_red "duplicated symbol #{symbol_name} in:", self.colored
       symbol_list.each do |symbol|
-        puts "- #{symbol.object_file.static_library.path} (#{symbol.object_file.name})".red
+        puts_red "- #{symbol.object_file.static_library.path} (#{symbol.object_file.name})", self.colored
       end
       puts ""
     end
@@ -323,7 +338,7 @@ class CheckSymbolForStaticLibraryUtility
     arch = self.arch.nil? ? "arm64" : self.arch
     arch_list = parse_arch_of_static_library(static_library_path)
     if not arch_list.include?(arch)
-      Log.w("#{static_library_path} not contains #{arch}")
+      Log.w("#{static_library_path} not contains #{arch}", true, self.colored)
       return []
     end
     command = "nm -arch #{arch} -m #{static_library_path}"
