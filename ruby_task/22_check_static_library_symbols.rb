@@ -23,8 +23,26 @@ require_relative '../ruby_tool/ext_numeric'
 
 $static_library_list = []
 
+def puts_red(msg, colored = true)
+  if colored
+    puts "#{msg}".red
+  else
+    puts"#{msg}"
+  end
+end
+
+def puts_magenta(msg, colored = true)
+  if colored
+    puts "#{msg}".magenta
+  else
+    puts"#{msg}"
+  end
+end
+
 class WCStaticLibrary
   attr_accessor :path
+  # xxx.a or yyy
+  attr_accessor :file_name
   attr_accessor :object_files
 end
 
@@ -128,6 +146,7 @@ class CheckSymbolForStaticLibraryUtility
   attr_accessor :dependency
   attr_accessor :arch
   attr_accessor :colored
+  attr_accessor :conflict_white_list
 
   # initialize for new
   def initialize
@@ -136,9 +155,9 @@ class CheckSymbolForStaticLibraryUtility
     self.cmd_parser = OptionParser.new do |opts|
       opts.banner = "Usage: #{__FILE__} PATH/TO/FOLDER [options]"
       opts.separator ""
-      opts.separator "在指定目录nm搜索特定的符号"
+      opts.separator "在指定文件夹下递归地检查所有静态库的符号"
       opts.separator "Examples:"
-      opts.separator "ruby #{__FILE__ } PATH/TO/FOLDER -v"
+      opts.separator "ruby #{__FILE__ } PATH/TO/FOLDER -c (检查符号冲突)"
       opts.separator "ruby #{__FILE__ } PATH/TO/FOLDER -d"
 
       opts.on("-v", "--[no-]verbose", "Run verbosely") do |toggle|
@@ -153,6 +172,10 @@ class CheckSymbolForStaticLibraryUtility
         self.conflict = toggle
       end
 
+      opts.on("-w", "--conflict-white-list x,y", Array, "The static libraries to ignore to check, e.g. libXXX.a or ") do |value|
+        self.conflict_white_list = value
+      end
+
       opts.on("-D", "--dependency", "Check symbol dependency") do |toggle|
         self.dependency = toggle
       end
@@ -161,17 +184,9 @@ class CheckSymbolForStaticLibraryUtility
         self.arch = value
       end
 
-      opts.on("-C","--[no-]color", "Run in debug mode") do |toggle|
+      opts.on("-C","--[no-]color", "Output with color") do |toggle|
         self.colored = toggle
       end
-    end
-  end
-
-  def puts_red(msg, colored = true)
-    if colored
-      puts "#{msg}".red
-    else
-      puts"#{msg}"
     end
   end
 
@@ -296,15 +311,29 @@ class CheckSymbolForStaticLibraryUtility
       end
     end
 
+    count = 0
     symbol_dict.each do |symbol_name, symbol_list|
       next if symbol_list.length < 2
 
-      puts_red "duplicate symbol '#{symbol_name}' in:", self.colored
+      rest_symbol_list = []
       symbol_list.each do |symbol|
+        if not self.conflict_white_list.include?(symbol.object_file.static_library.file_name)
+          rest_symbol_list.append(symbol)
+        end
+      end
+
+      # Note: if all symbol ignored by its containing static library, just skip print duplicate symbol
+      next if rest_symbol_list.length == 0
+
+      count = count + 1
+      puts_red "duplicate symbol '#{symbol_name}' in:", self.colored
+      rest_symbol_list.each do |symbol|
         puts_red "- #{symbol.object_file.static_library.path} (#{symbol.object_file.name})", self.colored
       end
       puts ""
     end
+
+    puts "Found #{count} duplicate symbols"
   end
 
   def process_symbol(line)
@@ -413,6 +442,7 @@ class CheckSymbolForStaticLibraryUtility
   def process_static_library(path)
     static_library = WCStaticLibrary.new
     static_library.path = path
+    static_library.file_name = File.basename(path)
     static_library.object_files = process_object_file(path, static_library)
     $static_library_list.append(static_library)
   end
@@ -455,9 +485,9 @@ class CheckSymbolForStaticLibraryUtility
   end
 end
 
-# @see https://stackoverflow.com/a/29166478
+utility = CheckSymbolForStaticLibraryUtility.new
 time = Benchmark.measure {
-  CheckSymbolForStaticLibraryUtility.new.run
+  utility.run
 }
 
-puts "Completed with #{time.real.duration}.".magenta
+puts_magenta "Completed with #{time.real.duration}.", utility.colored
