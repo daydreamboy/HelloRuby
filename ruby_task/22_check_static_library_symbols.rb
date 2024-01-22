@@ -362,10 +362,16 @@ class CheckSymbolForStaticLibraryUtility
     # Note: "000000000000557e (__TEXT,__cstring) non-external l___PRETTY_FUNCTION__.__57-[NSItemProvider(XXXUtils) yy_loadOriginalFileURL]_block_invoke"
     elsif line.include?(" l___")
       separator = 'l___'
+    # Note:
+    # 0000000000005788 (__DATA,__bss) non-external __ZZ34+[WANMailService(Load) initialize]E9onceToken
+    # 0000000000000120 (__TEXT,__text) weak private external ___clang_call_terminate
+    elsif line.include?(" __")
+      matchData = line.match(/\ __.+$/)
+      separator = matchData ? matchData[0] : ' '
     else
       separator = ' '
     end
-    symbol.attribute = (line.rindex(')').nil? || line.rindex(separator).nil?) ? "" : line[line.rindex(')')+1..line.rindex(separator)].strip
+    symbol.attribute = (line.index(')').nil? || line.rindex(separator).nil?) ? "" : line[line.index(')')+1..line.rindex(separator)].strip
     symbol.name = line.rindex(separator).nil? ? "" : line[line.rindex(separator)..-1].strip
 
     # if symbol.name.include?("dt_loadOriginalFileURL")
