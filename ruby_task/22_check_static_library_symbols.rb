@@ -44,6 +44,10 @@ class WCStaticLibrary
   # xxx.a or yyy
   attr_accessor :file_name
   attr_accessor :object_files
+
+  def ==(other)
+    return @path == other.path
+  end
 end
 
 class WCObjectFile
@@ -57,34 +61,28 @@ class WCObjectFile
   # Object relation
   attr_accessor :static_library
 
+  # Private ivars
+  @defined_symbols
+  @defined_external_symbols
+  @undefined_symbols
+
+  def initialize
+    super
+    @defined_symbols = nil
+    @defined_external_symbols = nil
+    @undefined_symbols = nil
+  end
+
   def defined_symbols
-    symbol_list = []
-    @symbols.each do |symbol|
-      if not symbol.is_undefined?
-        symbol_list.append(symbol)
-      end
-    end
-    symbol_list
+    @defined_symbols ||= @symbols.select { |symbol| !symbol.is_undefined? }
   end
 
   def defined_external_symbols
-    symbol_list = []
-    @symbols.each do |symbol|
-      if not symbol.is_undefined? and symbol.is_external?
-        symbol_list.append(symbol)
-      end
-    end
-    symbol_list
+    @defined_external_symbols ||= @symbols.select { |symbol| !symbol.is_undefined? and symbol.is_external? }
   end
 
   def undefined_symbols
-    symbol_list = []
-    @symbols.each do |symbol|
-      if symbol.is_undefined?
-        symbol_list.append(symbol)
-      end
-    end
-    symbol_list
+    @undefined_symbols ||= @symbols.select { |symbol| symbol.is_undefined? }
   end
 
   ##
@@ -113,6 +111,10 @@ class WCSymbol
 
   # Object relation
   attr_accessor :object_file
+
+  def ==(other)
+    return @name == other.name
+  end
 
   ##
   # Check symbol if undefined
@@ -147,6 +149,7 @@ class CheckSymbolForStaticLibraryUtility
   attr_accessor :arch
   attr_accessor :colored
   attr_accessor :conflict_white_list
+  attr_accessor :conflict_black_list_file
 
   # initialize for new
   def initialize
@@ -174,6 +177,10 @@ class CheckSymbolForStaticLibraryUtility
 
       opts.on("-w", "--conflict-white-list x,y", Array, "The static libraries to ignore to check, e.g. libXXX.a or ") do |value|
         self.conflict_white_list = value
+      end
+
+      opts.on("-b", "--conflict-black-list-file=path", "Black list file", String) do |value|
+        self.conflict_black_list_file = value
       end
 
       opts.on("-D", "--dependency", "Check symbol dependency") do |toggle|
@@ -311,29 +318,82 @@ class CheckSymbolForStaticLibraryUtility
       end
     end
 
+    conflict_black_list = self.conflict_black_list_file ?  File.readlines(self.conflict_black_list_file).map(&:chomp) : []
+
     count = 0
     symbol_dict.each do |symbol_name, symbol_list|
       next if symbol_list.length < 2
 
-      rest_symbol_list = []
+      conflict_symbol_list = []
       symbol_list.each do |symbol|
-        if not self.conflict_white_list.include?(symbol.object_file.static_library.file_name)
-          rest_symbol_list.append(symbol)
-        end
+        static_library_name = symbol.object_file.static_library.file_name
+        # Note: not in black list, just skip
+        next if conflict_black_list.length > 0 and not conflict_black_list.include?(static_library_name)
+        # Note: in white list, just skip
+        next if not self.conflict_white_list.nil? and self.conflict_white_list.include?(static_library_name)
+
+        conflict_symbol_list.append(symbol)
       end
 
-      # Note: if all symbol ignored by its containing static library, just skip print duplicate symbol
-      next if rest_symbol_list.length == 0
+      # Note: if conflicted symbols are <= 1, just skip print duplicate symbol
+      next if conflict_symbol_list.length <= 1
 
       count = count + 1
       puts_red "duplicate symbol '#{symbol_name}' in:", self.colored
-      rest_symbol_list.each do |symbol|
+      conflict_symbol_list.each do |symbol|
         puts_red "- #{symbol.object_file.static_library.path} (#{symbol.object_file.name})", self.colored
       end
       puts ""
     end
 
     puts "Found #{count} duplicate symbols"
+  end
+
+  def check_symbol_dependency
+    dependencies = {}
+    undefined_symbols = {}
+    defined_symbols = {}
+    $static_library_list.each do |static_library|
+      Log.v("[Dependency] checking #{static_library.path}") if self.verbose
+      static_library.object_files.each do |object_file|
+        Log.v("[Dependency] checking object #{object_file.name}") if self.verbose
+
+        object_file.undefined_symbols.each do |symbol|
+          undefined_symbols[symbol.name] = symbol
+        end
+
+        object_file.defined_symbols.each do |symbol|
+          defined_symbols[symbol.name] = symbol
+        end
+      end
+    end
+
+    undefined_symbols.each do |name, undefined_symbol|
+      defined_symbol = defined_symbols[name]
+      # Note: ignore defined and undefined symbols both in the same static library
+      if not defined_symbol.nil? and undefined_symbol.object_file.static_library.file_name != defined_symbol.object_file.static_library.file_name
+        pair = "#{undefined_symbol.object_file.static_library.file_name},#{defined_symbol.object_file.static_library.file_name}"
+        dependencies[pair] ||= []
+        dependencies[pair].append(name)
+        dependencies[pair].uniq!
+      end
+    end
+
+    # puts "Found #{dependencies.length} dependencies:"
+    # dependencies.sort_by { |key, value| key }.each do |key, symbol_list|
+    #   puts "- #{key}"
+    #   symbol_list.each do |symbol_name|
+    #     puts "  #{symbol_name}"
+    #   end
+    # end
+
+    puts "```mermaid"
+    puts "graph LR"
+    dependencies.sort_by { |key, value| key }.each do |key, symbol_list|
+      pair = key.split(",")
+      puts "#{pair[0]} --> #{pair[1]}"
+    end
+    puts "```"
   end
 
   def process_symbol(line)
@@ -458,6 +518,7 @@ class CheckSymbolForStaticLibraryUtility
     self.cmd_parser.parse!
 
     if ARGV.length != 1
+      dump_object(ARGV)
       puts self.cmd_parser.help
       return
     end
@@ -486,6 +547,10 @@ class CheckSymbolForStaticLibraryUtility
 
     if self.conflict
       check_symbol_conflict()
+    end
+
+    if self.dependency
+      check_symbol_dependency()
     end
 
   end
