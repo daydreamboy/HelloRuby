@@ -10,10 +10,9 @@ class LdCommandParser
     self.cmd_parser = OptionParser.new do |opts|
       opts.banner = "Usage: #{__FILE__} PATH/TO/FOLDER [options]"
       opts.separator ""
-      opts.separator "在指定文件夹下递归地检查所有静态库的符号"
+      opts.separator "解析ld的输出内容，提取静态库或动态库"
       opts.separator "Examples:"
-      opts.separator "ruby #{__FILE__ } PATH/TO/FOLDER -c (检查符号冲突)"
-      opts.separator "ruby #{__FILE__ } PATH/TO/FOLDER -d"
+      opts.separator "ruby #{__FILE__ } PATH/TO/FILE"
     end
   end
 
@@ -34,6 +33,7 @@ class LdCommandParser
 
     content = IO.read(file_path)
     libraries = content.scan(/ -l([^ ]+)/).flatten
+    libraries = libraries.map { |item| "lib#{item}.a" }
     # puts libraries
 
     frameworks = content.scan(/ -framework ([^ ]+)/).flatten

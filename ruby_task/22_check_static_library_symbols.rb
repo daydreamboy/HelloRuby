@@ -44,6 +44,7 @@ class WCStaticLibrary
   # xxx.a or yyy
   attr_accessor :file_name
   attr_accessor :object_files
+  attr_accessor :pod_name
 
   def ==(other)
     return @path == other.path
@@ -149,11 +150,13 @@ class CheckSymbolForStaticLibraryUtility
   attr_accessor :arch
   attr_accessor :colored
   attr_accessor :conflict_white_list
-  attr_accessor :conflict_black_list_file
+  attr_accessor :black_list_file
+  attr_accessor :dependency_html
 
   # initialize for new
   def initialize
     self.colored = true
+    self.dependency_html = true
 
     self.cmd_parser = OptionParser.new do |opts|
       opts.banner = "Usage: #{__FILE__} PATH/TO/FOLDER [options]"
@@ -179,12 +182,16 @@ class CheckSymbolForStaticLibraryUtility
         self.conflict_white_list = value
       end
 
-      opts.on("-b", "--conflict-black-list-file=path", "Black list file", String) do |value|
-        self.conflict_black_list_file = value
+      opts.on("-b", "--black-list-file=path", "Black list file", String) do |value|
+        self.black_list_file = value
       end
 
       opts.on("-D", "--dependency", "Check symbol dependency") do |toggle|
         self.dependency = toggle
+      end
+
+      opts.on("-H", "--[no-]html", "Output as html") do |toggle|
+        self.dependency_html = toggle
       end
 
       opts.on("-aArchFlag", "--arch=ArchFlag", "Arch type. Default is arm64") do |value|
@@ -276,31 +283,6 @@ class CheckSymbolForStaticLibraryUtility
   end
 
   def check_symbol_conflict
-    # Version1: too slow when Pods folder has 500+ pods
-=begin
-    $static_library_list.each_with_index do |static_library1, index1|
-      Log.v("[Conflict] checking #{static_library1.path}") if self.verbose
-
-      static_library1.object_files.each do |object_file1|
-        Log.v("[Conflict] checking object #{object_file1.name}") if self.verbose
-        defined_external_symbols = object_file1.defined_external_symbols
-        defined_external_symbols.each do |symbol|
-          $static_library_list.each_with_index do |static_library2, index2|
-            next if index2 <= index1
-
-            static_library2.object_files.each do |object_file2|
-              if object_file2.contains_defined_external_symbol_name?(symbol.name)
-                puts "duplicated symbol #{symbol.name} both in:".red
-                puts "- #{static_library1.path} (#{object_file1.name})".red
-                puts "- #{static_library2.path} (#{object_file2.name})".red
-              end
-            end
-          end
-        end
-      end
-    end
-=end
-
     symbol_dict = {}
     $static_library_list.each do |static_library|
       Log.v("[Conflict] checking #{static_library.path}") if self.verbose
@@ -318,7 +300,7 @@ class CheckSymbolForStaticLibraryUtility
       end
     end
 
-    conflict_black_list = self.conflict_black_list_file ?  File.readlines(self.conflict_black_list_file).map(&:chomp) : []
+    library_black_list = self.black_list_file ?  File.readlines(self.black_list_file).map(&:chomp) : []
 
     count = 0
     symbol_dict.each do |symbol_name, symbol_list|
@@ -328,7 +310,7 @@ class CheckSymbolForStaticLibraryUtility
       symbol_list.each do |symbol|
         static_library_name = symbol.object_file.static_library.file_name
         # Note: not in black list, just skip
-        next if conflict_black_list.length > 0 and not conflict_black_list.include?(static_library_name)
+        next if library_black_list.length > 0 and not library_black_list.include?(static_library_name)
         # Note: in white list, just skip
         next if not self.conflict_white_list.nil? and self.conflict_white_list.include?(static_library_name)
 
@@ -353,47 +335,114 @@ class CheckSymbolForStaticLibraryUtility
     dependencies = {}
     undefined_symbols = {}
     defined_symbols = {}
+    library_black_list = self.black_list_file ?  File.readlines(self.black_list_file).map(&:chomp) : []
+
     $static_library_list.each do |static_library|
+      # Note: not in black list, just skip
+      next if library_black_list.length > 0 and not library_black_list.include?(static_library.file_name)
+
       Log.v("[Dependency] checking #{static_library.path}") if self.verbose
       static_library.object_files.each do |object_file|
         Log.v("[Dependency] checking object #{object_file.name}") if self.verbose
 
         object_file.undefined_symbols.each do |symbol|
-          undefined_symbols[symbol.name] = symbol
+          undefined_symbols[symbol.name] ||= []
+          unless undefined_symbols[symbol.name].any? { |s| s.object_file.static_library.pod_name == symbol.object_file.static_library.pod_name }
+            undefined_symbols[symbol.name] << symbol
+          end
         end
 
         object_file.defined_symbols.each do |symbol|
-          defined_symbols[symbol.name] = symbol
+          defined_symbols[symbol.name] ||= []
+          unless defined_symbols[symbol.name].any? { |s| s.object_file.static_library.pod_name == symbol.object_file.static_library.pod_name }
+            defined_symbols[symbol.name] << symbol
+          end
         end
       end
     end
 
-    undefined_symbols.each do |name, undefined_symbol|
-      defined_symbol = defined_symbols[name]
-      # Note: ignore defined and undefined symbols both in the same static library
-      if not defined_symbol.nil? and undefined_symbol.object_file.static_library.file_name != defined_symbol.object_file.static_library.file_name
-        pair = "#{undefined_symbol.object_file.static_library.file_name},#{defined_symbol.object_file.static_library.file_name}"
-        dependencies[pair] ||= []
-        dependencies[pair].append(name)
-        dependencies[pair].uniq!
+    undefined_symbols.each_value do |symbols_list|
+      symbols_list.sort_by! { |s| s.object_file.static_library.pod_name }
+    end
+
+    defined_symbols.each_value do |symbols_list|
+      symbols_list.sort_by! { |s| s.object_file.static_library.pod_name }
+    end
+
+    undefined_symbols.each do |name, undefined_symbol_list|
+      defined_symbol_list = defined_symbols[name]
+      next if defined_symbol_list.nil?
+      next if undefined_symbol_list.length == 0
+
+      undefined_symbol_library_list = undefined_symbol_list.map { |s| s.object_file.static_library.pod_name }
+      defined_symbol_library_list = defined_symbol_list.map { |s| s.object_file.static_library.pod_name }
+
+      # Note: remove same pod name which both in undefined_symbol_library_list and defined_symbol_library_list
+      intersection = undefined_symbol_library_list & defined_symbol_library_list
+      undefined_symbol_library_list -= intersection
+
+      # Note: if undefined symbols and defined_symbols are both in the same library, just skip
+      next if undefined_symbol_library_list.length == 0
+
+      part1 = undefined_symbol_library_list.join(',')
+      part2 = defined_symbol_library_list.join(',')
+
+      pair = "#{part1}~>#{part2}"
+      dependencies[pair] ||= []
+      dependencies[pair].append(name)
+      dependencies[pair].uniq!
+    end
+
+    dependencies.each_value do |symbols_list|
+      symbols_list.sort_by!
+    end
+
+    if self.dependency_html
+      lines = []
+      dependencies.sort_by { |key, value| key }.each do |key, symbol_list|
+        pair = key.split("~>")
+        first_part_list = pair[0].split(',')
+        second_part_list = pair[1].split(',')
+
+        combinations = first_part_list.product(second_part_list)
+        lines += combinations.map { |x, y| "#{x} --> #{y}\n" }
+      end
+
+      mermaid = "graph LR\n"
+      lines.uniq.sort.each do |item|
+        mermaid += item
+      end
+
+      html = <<-HEREDOC
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Symbol Dependency</title>
+</head>
+<body>
+  <div class="mermaid">
+    #{mermaid}
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      maxEdges: 1200
+    });
+  </script>
+</body>
+</html>
+HEREDOC
+      puts html
+    else
+      puts "Found #{dependencies.length} dependencies:"
+      dependencies.sort_by { |key, value| key }.each do |key, symbol_list|
+        puts "- #{key}"
+        symbol_list.each do |symbol_name|
+          puts "  #{symbol_name}"
+        end
       end
     end
-
-    # puts "Found #{dependencies.length} dependencies:"
-    # dependencies.sort_by { |key, value| key }.each do |key, symbol_list|
-    #   puts "- #{key}"
-    #   symbol_list.each do |symbol_name|
-    #     puts "  #{symbol_name}"
-    #   end
-    # end
-
-    puts "```mermaid"
-    puts "graph LR"
-    dependencies.sort_by { |key, value| key }.each do |key, symbol_list|
-      pair = key.split(",")
-      puts "#{pair[0]} --> #{pair[1]}"
-    end
-    puts "```"
   end
 
   def process_symbol(line)
@@ -507,6 +556,7 @@ class CheckSymbolForStaticLibraryUtility
 
   def process_static_library(path)
     static_library = WCStaticLibrary.new
+    static_library.pod_name = path.match(/Pods\/Release\/([^\/]+)\/[^\/]+/)[1]
     static_library.path = path
     static_library.file_name = File.basename(path)
     static_library.object_files = process_object_file(path, static_library)

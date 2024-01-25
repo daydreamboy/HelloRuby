@@ -8,12 +8,11 @@ class LdOutputParser
 
   def initialize
     self.cmd_parser = OptionParser.new do |opts|
-      opts.banner = "Usage: #{__FILE__} PATH/TO/FOLDER [options]"
+      opts.banner = "Usage: #{__FILE__} PATH/TO/FILE [options]"
       opts.separator ""
       opts.separator "在指定文件夹下递归地检查所有静态库的符号"
       opts.separator "Examples:"
-      opts.separator "ruby #{__FILE__ } PATH/TO/FOLDER -c (检查符号冲突)"
-      opts.separator "ruby #{__FILE__ } PATH/TO/FOLDER -d"
+      opts.separator "ruby #{__FILE__ } PATH/TO/FILE"
     end
   end
 
@@ -54,9 +53,13 @@ class LdOutputParser
     category_dict = {}
     conflict_symbols.each do |dict|
       # puts dict
-      category_dict[dict[:library_list]] ||= []
-      category_dict[dict[:library_list]].append(dict[:symbol_name])
-      category_dict[dict[:library_list]].uniq!
+      key = dict[:library_list]
+      category_dict[key] ||= []
+      category_dict[key].append(dict[:symbol_name])
+      category_dict[key].uniq!
+    end
+    category_dict.each_value do |value|
+      value.sort!
     end
 
     # puts category_dict
