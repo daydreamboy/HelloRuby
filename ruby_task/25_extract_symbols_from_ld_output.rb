@@ -35,11 +35,14 @@ class LdOutputParser
 
     content = IO.read(file_path)
     content.scan(/duplicate symbol '([^']+)' in:\n((?:.|\n)+?)(?=\nduplicate symbol '|\z)/m) do |match|
-      # puts match[1]
       library_list = []
       match[1].scan(/Pods\/Release\/([^\/]+)\/[^\/]+/m) do |inner_match|
         # puts "- #{inner_match[0]}"
         library_list.append(inner_match[0])
+      end
+
+      match[1].scan(/^.*Developer\/Xcode\/DerivedData.*$/) do |inner_match|
+        library_list.append(File.basename(inner_match))
       end
 
       conflict_symbols.append(
