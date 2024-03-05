@@ -10,7 +10,7 @@ class LdCommandParser
     self.cmd_parser = OptionParser.new do |opts|
       opts.banner = "Usage: #{__FILE__} PATH/TO/FOLDER [options]"
       opts.separator ""
-      opts.separator "解析ld的输出内容，提取静态库或动态库"
+      opts.separator "解析Xcode的ld命令，提取静态库或动态库"
       opts.separator "Examples:"
       opts.separator "ruby #{__FILE__ } PATH/TO/FILE"
     end

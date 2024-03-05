@@ -10,7 +10,7 @@ class LdOutputParser
     self.cmd_parser = OptionParser.new do |opts|
       opts.banner = "Usage: #{__FILE__} PATH/TO/FILE [options]"
       opts.separator ""
-      opts.separator "在指定文件夹下递归地检查所有静态库的符号"
+      opts.separator "解析Xcode的ld命令执行输出结果，存在重复符号的报错"
       opts.separator "Examples:"
       opts.separator "ruby #{__FILE__ } PATH/TO/FILE"
     end
