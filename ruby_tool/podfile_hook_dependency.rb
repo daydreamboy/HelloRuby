@@ -55,10 +55,10 @@ module Pod
         end
 
         if not should_ignore_dependency
-          Log.d("[pod_dependency] install #{dependency_pod_name} for pod #{self.name} with #{args}", PodfileDependencyHook.debug_flag)
+          Log.i("[pod_dependency] install #{dependency_pod_name} for pod #{self.name} with #{args}", PodfileDependencyHook.debug_flag)
           original_dependency *args
         else
-          Log.d("Skip dependency #{dependency_pod_name}", PodfileDependencyHook.debug_flag)
+          Log.i("Skip dependency #{dependency_pod_name}", PodfileDependencyHook.debug_flag)
         end
       end
     end
