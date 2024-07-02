@@ -50,7 +50,10 @@ class LdOutputParser
       end
 
       match[1].scan(/^.*Developer\/Xcode\/DerivedData.*$/) do |inner_match|
-        library_list.append(File.basename(inner_match))
+        file_name = File.basename(inner_match)
+        # Note: someLib.a(xxx.o), to remove (xxx.o)
+        file_name.gsub!(/\(.*\)/, '')
+        library_list.append(file_name)
       end
 
       conflict_symbols.append(
