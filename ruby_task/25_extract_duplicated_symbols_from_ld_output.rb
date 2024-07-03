@@ -82,7 +82,7 @@ class LdOutputParser
       output_dict[library_list.join(',')] = conflict_symbol_list
     end
 
-    puts "Found #{output_dict.length} conflicts:"
+    puts "Found #{output_dict.length} library conflicts:"
     output_dict.sort_by { |key, value| key }.each do |key, conflict_symbol_list|
       puts "- #{key}"
       conflict_symbol_list.each do |conflict_symbol|
