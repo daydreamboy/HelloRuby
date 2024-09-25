@@ -2817,7 +2817,7 @@ $ source /Users/wesley_chen/.rvm/scripts/rvm
 
 
 
-## 18、使用Rakefile
+## 18、使用Rake
 
 Rake是一个用Ruby实现的Make-like程序，用于Ruby语法来描述任务和依赖关系。
 
@@ -3151,6 +3151,34 @@ $ gem -v
 3.0.6
 $ bundle -v
 Bundler version 1.17.3
+```
+
+[这篇文章](https://engineering.appfolio.com/appfolio-engineering/2017/2/27/ruby-rubygems-and-bundler)，更加详细介绍Ruby、RubyGems和Bundler的三者上下层关系：Ruby > RubyGems > Bundler，后者基于前者的上层。
+
+个人理解RubyGems管理全局gem，而Bundler管理Ruby工程的局部gem。
+
+很多gem命令，可以通过bundle exec前缀来执行，获取Ruby工程的信息。举个例子，如下
+
+```shell
+$ cd hello_bundle
+$ gem list
+
+*** LOCAL GEMS ***
+
+activesupport (6.1.4.6, 4.2.11.3, 4.2.11.1)
+addressable (2.8.0)
+algoliasearch (1.27.3, 1.27.1)
+atomos (0.1.3)
+...
+$ bundle exec gem list
+
+*** LOCAL GEMS ***
+
+bundler (default: 1.17.3)
+colorize (1.1.0)
+concurrent-ruby (1.3.4)
+faker (2.22.0)
+i18n (1.14.6)
 ```
 
 
