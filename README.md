@@ -3145,6 +3145,8 @@ $ git add Gemfile Gemfile.lock
 
 
 
+
+
 ### (1) 使用Gemfile
 
 在执行bundle命令之前，导出BUNDLE_GEMFILE环境变量，可以指定Gemfile的路径[^39]。
@@ -3159,6 +3161,15 @@ TODO: https://bundler.io/guides/gemfile.html
 
 
 ### (2) 使用bundle命令
+
+| 命令           | 作用                         |
+| -------------- | ---------------------------- |
+| bundle exec    |                              |
+| bundle init    | 初始化一个Gemfile            |
+| bundle install | 根据Gemfile，安装指定的gem包 |
+| bundle list    | 列出ruby工程中已安装的gem    |
+
+
 
 TODO: https://bundler.io/v2.4/man/bundle-install.1.html
 
@@ -3189,6 +3200,7 @@ TODO: https://bundler.io/v2.4/man/bundle-install.1.html
 | 变量名 | 值类型 | 作用                                                         |
 | ------ | ------ | ------------------------------------------------------------ |
 | `$0`   | String | 获取命令行中可执行文件的路径。当`$0`所在脚本，被其他脚本调用，`$0`总是命令行中可执行文件（不包括ruby命令） |
+| `$/`   |        | 换行符，默认是`\n`                                           |
 
 
 
@@ -3217,6 +3229,19 @@ $ ruby ./predefined_global_variables_caller.rb
 ./predefined_global_variables_caller.rb
 $ ruby predefined_global_variables_caller.rb
 predefined_global_variables_caller.rb
+```
+
+
+
+#### `$/`
+
+`$/`表示换行符，默认是`\n`，可以对这个变量赋值来修改。举个例子，如下
+
+```shell
+irb > puts "1#{$/}1"
+1
+1
+ => nil 
 ```
 
 
