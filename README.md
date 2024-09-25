@@ -3108,62 +3108,60 @@ TODO：https://ruby.github.io/rake/doc/rakefile_rdoc.html#label-Tasks+that+take+
 
 ## 19、使用Bundler
 
-Bundler是Ruby工程使用的gem管理工具。[官方文档](https://bundler.io/)对Bundler的描述，如下
+### (1) 介绍Bundler
+
+Bundler是一个Ruby gem，它用于管理Ruby工程中的gem。Bundler有专门的官方网址：https://bundler.io/
+
+[官方文档](https://bundler.io/)对Bundler的描述，如下
 
 > Bundler provides a consistent environment for Ruby projects by tracking and installing the exact gems and versions that are needed.
 
-当一个Ruby工程，依赖其他gem提供的API，使用Bunder提供Gemfile文件，可管理依赖gem的版本号。通过`bundle install`命令，可以安装Gemfile文件描述的gem包。
+简单理解，意思是Bundler为ruby工程提供一致性的环境，包括安装、跟踪需要的、准确的gem版本。
 
-bundle命令默认安装在Ruby中，参考官方文档描述[^38]，如下
-
-> If you do not have Ruby installed, do that first and then check back here! Any modern distribution of Ruby comes with Bundler preinstalled by default.
-
-使用Bundler有两个步骤：
-
-* 编写Gemfile文件
-* 执行bundle命令
-
-举个例子[^38]，如下
-
-Gemfile文件的内容，如下
-
-```ruby
-source 'https://rubygems.org'
-gem 'nokogiri'
-gem 'rack', '~> 2.2.4'
-gem 'rspec'
-```
-
-然后执行bundle命令
+Bundler是默认跟随ruby一起安装在系统上的，使用下面命令可以查看已安装的版本，如下
 
 ```shell
-$ bundle install
-$ git add Gemfile Gemfile.lock
+$ gem list | grep -e bundler
+bundler (default: 1.17.3)
+bundler-unload (1.0.2)
+rubygems-bundler (1.4.5)
+$ bundle -v
+Bundler version 1.17.3
 ```
 
-这里Gemfile.lock是根据Gemfile文件生成的，可以一起放入git仓库中。
+其中bundler版本是1.17.3，其他gem是和bundler相关的gem，这里不做介绍。
 
 
 
+### (2) Bundler vs. RubyGems
 
+Bundler和RubyGems，都包管理工具，在使用上有相似的命令，容易混淆，这里区分两者的概念和用途。
 
-### (1) 使用Gemfile
+| Bundler                                      | RubyGems                            |
+| -------------------------------------------- | ----------------------------------- |
+| 以单独gem安装包存在                          | ruby自身的包管理工具，不是单独的gem |
+| 使用Gemfile作为包管理的配置文件              | 没有类似Gemfile的配置文件           |
+| 通过Bundler安装的gem是本地工程的，不是全局的 | 通过RubyGems安装的gem是全局的       |
+| Bundler使用`bundle`命令                      | RubyGems使用`gem`命令               |
 
-在执行bundle命令之前，导出BUNDLE_GEMFILE环境变量，可以指定Gemfile的路径[^39]。
+举个例子，下面查看Bundler和RubyGems的版本号，如下
 
 ```shell
-export BUNDLE_GEMFILE="$project_bundle/Gemfile"
-command bundle install --no-prune
+$ gem -v
+3.0.6
+$ bundle -v
+Bundler version 1.17.3
 ```
 
-TODO: https://bundler.io/guides/gemfile.html
 
 
+### (3) bundle命令
 
-### (2) 使用bundle命令
+bundle命令是bundler gem提供命令行工具。常用的命令，如下
 
 | 命令           | 作用                         |
 | -------------- | ---------------------------- |
+| bundle add     |                              |
 | bundle exec    |                              |
 | bundle init    | 初始化一个Gemfile            |
 | bundle install | 根据Gemfile，安装指定的gem包 |
@@ -3171,7 +3169,111 @@ TODO: https://bundler.io/guides/gemfile.html
 
 
 
-TODO: https://bundler.io/v2.4/man/bundle-install.1.html
+### (4) Gemfile
+
+Gemfile是Bundler约定使用的包管理配置文件，[官方文档](https://bundler.io/guides/gemfile.html)专门介绍这个文件的语法，这里不做展开。
+
+参考[这篇文章](https://www.geeksforgeeks.org/how-to-create-gemfile-in-ruby/)提供的例子，介绍如何使用Gemfile文件。主要有下面几个步骤：
+
+* 创建Gemfile文件
+* 编写Gemfile文件
+* ruby主入口文件
+* 执行bundle exec命令
+
+> 示例工程，见ruby_project/hello_bundle
+
+
+
+#### a. 创建Gemfile文件
+
+可以手动创建或者使用下面命令创建Gemfile文件，如下
+
+```shell
+$ mkdir hello_bundle
+$ cd hello_bundle
+$ bundle init
+```
+
+
+
+#### b. 编写Gemfile文件
+
+将生成有模板的Gemfile文件，改写成下面内容，如下
+
+```ruby
+# frozen_string_literal: true
+
+source "https://rubygems.org"
+
+gem "faker"
+gem "colorize"
+```
+
+Gemfile文件的语法，请参考[官方文档](https://bundler.io/guides/gemfile.html)。
+
+
+
+#### c. ruby主入口文件
+
+创建一个ruby脚本的主入口文件，如下
+
+```shell
+$ cd hello_bundle
+$ touch app.rb
+```
+
+app.rb的内容，如下
+
+```ruby
+# app.rb
+
+require 'bundler/setup'
+
+require 'faker'
+require 'colorize'
+
+puts "Welcome to the Fake Name Generator!".colorize(:green)
+
+10.times do
+  name = Faker::Name.name
+  puts "- #{name}".colorize(:blue)
+end
+```
+
+这里参考[官方文档](https://bundler.io/guides/bundler_setup.html)的做法，在第一行引入`require 'bundler/setup'`，是为了加载Gemfile指定gem版本，让当前执行环境可以访问到这些gem库。
+
+> This will automatically discover your `Gemfile` and make all of the gems in your `Gemfile` available to Ruby (in technical terms, it puts the gems “on the load path”).
+
+在bundler/setup之后，可以使用require导入相应的gem库。如果有很多个库，可以使用下面命令一次性导入，如下
+
+```ruby
+Bundler.require(:default)
+```
+
+注意：如果gem数量很多，官方推荐使用这个方式。如果Gemfile指定gem数量不多，可以不使用这个方式。
+
+> For such a small `Gemfile`, we’d advise you to skip `Bundler.require` and just require the gems by hand (especially given the need to put in a `:require` directive in the `Gemfile`). For much larger `Gemfile`s, using `Bundler.require` allows you to skip repeating a large stack of requirements.
+
+
+
+#### d. 执行bundle exec命令
+
+参考这个[SO](https://stackoverflow.com/questions/3372254/how-to-tell-bundler-where-the-gemfile-is)，在执行bundle命令之前，导出BUNDLE_GEMFILE环境变量，可以指定Gemfile的路径。
+
+```shell
+export BUNDLE_GEMFILE="$project_bundle/Gemfile"
+command bundle install --no-prune
+```
+
+这里直接使用bundle exec命令，如下
+
+```shell
+$ bundle exec ruby app.rb
+```
+
+说明
+
+> 某些情况下，直接执行ruby app.rb，也可以找到对应版本的gem库并执行成功，但是[官方github](https://github.com/rubygems/rubygems/tree/master/bundler)的示例，使用的是bundle exec命令。
 
 
 
@@ -3413,9 +3515,6 @@ $ gem which cocoapods
 
 [^36]:https://stackoverflow.com/questions/995593/what-does-or-equals-mean-in-ruby
 [^37]:https://stackoverflow.com/questions/34628349/what-is-use-of-begin-end-block-in-ruby
-
-[^38]:https://bundler.io/
-[^39]:https://stackoverflow.com/questions/3372254/how-to-tell-bundler-where-the-gemfile-is
 
 
 

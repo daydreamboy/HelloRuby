@@ -1,14 +1,9 @@
 # app.rb
 
-puts $LOAD_PATH
-# require 'bundler/setup'
-Bundler.require(:default)
+require 'bundler/setup'
 
-puts '-----------'
-puts $LOAD_PATH
-
-# require 'faker'
-# require 'colorize'
+require 'faker'
+require 'colorize'
 
 puts "Welcome to the Fake Name Generator!".colorize(:green)
 
