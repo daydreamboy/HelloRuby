@@ -168,52 +168,43 @@ class NmUtility
     all_paths = Dir.glob(dir_path + '/**{,/*/**}/*').uniq
     all_paths.each do |item|
       next if item == '.' or item == '..'
+      next if File.directory?(item) or !File.exist?(item)
+      # @see https://stackoverflow.com/questions/16902083/exclude-the-from-a-file-extension-in-rails
+      file_ext = File.extname(item).delete('.')
+      next if !exclude_list.empty? and exclude_list.include?(file_ext)
+      # Note: check dir_path/XXX or dir_path/.../XXX
+      next if $default_ignore_folder_list.any? { |ignore_folder| item.include?("#{ignore_folder}") }
+      next if !include_list.empty? and !include_list.include?(file_ext)
 
-      if !File.directory?(item) && File.exist?(item)
-        # @see https://stackoverflow.com/questions/16902083/exclude-the-from-a-file-extension-in-rails
-        file_ext = File.extname(item).delete('.')
-        if !exclude_list.empty? and exclude_list.include?(file_ext)
+      #puts "#{item}" if debug
+
+      # Note: lookup symbols for every file
+      symbol_list.each do |symbol|
+        command = "nm -m \"#{item}\" 2>/dev/null | grep '#{symbol}'"
+        if debug
+          puts colored ? command.cyan : command
           next
         end
 
-        # Note: check dir_path/XXX or dir_path/.../XXX
-        if $default_ignore_folder_list.any? { |ignore_folder| item.include?("#{ignore_folder}") }
-          next
-        end
+        stdout, stderr, status = Open3.capture3(command)
 
-        #puts "#{item}" if debug
-
-        if include_list.empty? or include_list.include?(file_ext) or file_ext == ''
-          # Note: lookup symbols for every file
-          symbol_list.each do |symbol|
-            command = "nm -m \"#{item}\" 2>/dev/null | grep '#{symbol}'"
-            if debug
-              puts colored ? command.cyan : command
-              next
-            end
-
-            stdout, stderr, status = Open3.capture3(command)
-
-            if status.success?
-              message = "Find symbol #{symbol} in #{item}"
-              if sorted
-                sorted_result.append(message)
-              else
-                puts colored ? message.green : message
-              end
-
-              if verbose and !stdout.empty?
-                puts colored ? "#{stdout}".blue : "#{stdout}"
-              end
-              # Note: detect one Swift symbol just stop, and to check next binary file
-              break
-            else
-              if verbose and !stderr.empty?
-                puts colored ? "#{stderr}".red : "#{stderr}"
-              end
-            end
+        if status.success?
+          message = "Find symbol #{symbol} in #{item}"
+          if sorted
+            sorted_result.append(message)
+          else
+            puts colored ? message.green : message
           end
 
+          if verbose and !stdout.empty?
+            puts colored ? "#{stdout}".blue : "#{stdout}"
+          end
+          # Note: detect one Swift symbol just stop, and to check next binary file
+          break
+        else
+          if verbose and !stderr.empty?
+            puts colored ? "#{stderr}".red : "#{stderr}"
+          end
         end
       end
     end
